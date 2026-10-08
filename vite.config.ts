@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: './',
+  define: {
+    // SHA do commit no GitHub Actions; "local" no PC.
+    __VERSAO__: JSON.stringify((process.env.GITHUB_SHA ?? 'local').slice(0, 7)),
+  },
   plugins: [
     react(),
     VitePWA({

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { exportarDados, importarDados } from '../db'
 import { carregarPrograma } from '../programa'
+import { VERSAO, buscarAtualizacao } from '../atualizacao'
 import { fmtNum, metaAgua, preferencias } from '../util'
 
 export default function Ajustes() {
@@ -8,6 +9,7 @@ export default function Ajustes() {
   const [peso, setPeso] = useState(String(preferencias.peso))
   const [persistente, setPersistente] = useState<boolean | null>(null)
   const [msg, setMsg] = useState('')
+  const [versaoMsg, setVersaoMsg] = useState('')
 
   useEffect(() => {
     navigator.storage?.persisted?.().then(setPersistente)
@@ -103,6 +105,24 @@ export default function Ajustes() {
             O navegador ainda não marcou o armazenamento como persistente. Instalar o app na tela inicial costuma resolver.
           </p>
         )}
+      </article>
+
+      <article className="card">
+        <h2>Versão {VERSAO}</h2>
+        <p className="sub">{versaoMsg || 'O app procura atualizações sozinho sempre que você abre.'}</p>
+        <button
+          className="sec largo"
+          onClick={async () => {
+            setVersaoMsg('Procurando…')
+            try {
+              setVersaoMsg((await buscarAtualizacao()) ? 'Atualizando…' : 'Você já está na versão mais recente.')
+            } catch {
+              setVersaoMsg('Sem conexão para verificar agora.')
+            }
+          }}
+        >
+          Buscar atualização
+        </button>
       </article>
     </section>
   )
