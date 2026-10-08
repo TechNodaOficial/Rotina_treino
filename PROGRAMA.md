@@ -118,11 +118,10 @@ As colunas são: séries de trabalho × reps · descanso.
 - **Por que bike:** fazer HIIT junto com musculação quase não afeta a hipertrofia. A pequena interferência que existe aparece mais com corrida. A bike tem menos impacto e menos fase excêntrica.
 - Quinta e domingo: caminhada de 30–45 min (cardio leve, que ajuda a recuperar).
 
-## Checklist diário (aba **Hoje** no app)
+## Fora do treino (referência)
 
 | Item | Meta |
 |---|---|
-| Treino do dia | Concluído no app |
 | Água | **~3,3 L** em dia de treino, **~2,6 L** no descanso |
 | Proteína | **120–160 g** (1,6–2,2 g/kg), em 3–5 refeições |
 | Sono | 7–9 h |
@@ -132,7 +131,7 @@ As colunas são: séries de trabalho × reps · descanso.
 | Mobilidade | 10 min |
 | Creatina | 3–5 g/dia (se você usa) |
 
-**Água (74 kg):** a base é ~35 ml/kg = ~2,6 L/dia. No dia de treino, some ~0,5–1 L por hora de treino, o que dá ~3,3 L. Um jeito prático de conferir: urina amarelo-clara. Se treinar no calor e suar muito, aumente. O peso pode ser alterado em **Ajustes**, e a meta se ajusta sozinha.
+**Água (74 kg):** a base é ~35 ml/kg = ~2,6 L/dia. No dia de treino, some ~0,5–1 L por hora de treino, o que dá ~3,3 L. Um jeito prático de conferir: urina amarelo-clara. Se treinar no calor e suar muito, aumente.
 
 ## Fontes
 

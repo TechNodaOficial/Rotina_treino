@@ -97,28 +97,6 @@ export const PROGRAMA: TreinoPrograma[] = [
   },
 ]
 
-export interface Habito {
-  id: string
-  titulo: string
-  detalhe: string
-  dias?: number[] // ausente = todos os dias
-}
-
-export const HABITOS: Habito[] = [
-  { id: 'proteina', titulo: 'Proteína: 120–160 g', detalhe: '1,6–2,2 g/kg, dividida em 3–5 refeições.' },
-  { id: 'sono', titulo: 'Dormir 7–9 h', detalhe: 'Recuperação é quando o músculo cresce.' },
-  { id: 'passos', titulo: '8.000+ passos', detalhe: 'Atividade leve diária, sem atrapalhar a recuperação.' },
-  {
-    id: 'hiit',
-    titulo: 'HIIT 15–20 min',
-    detalhe: 'Bike: 5 min leve → 8× (30 s forte / 90 s leve) → 3 min leve. Depois do treino ou em outro horário.',
-    dias: [2, 6],
-  },
-  { id: 'caminhada', titulo: 'Caminhada 30–45 min', detalhe: 'Dia de descanso: cardio leve ajuda a recuperar.', dias: [0, 4] },
-  { id: 'mobilidade', titulo: 'Mobilidade 10 min', detalhe: 'Quadril, tornozelo, ombro e torácica.' },
-  { id: 'creatina', titulo: 'Creatina 3–5 g', detalhe: 'Se você usa. Todo dia, qualquer horário.' },
-]
-
 /** Adiciona os treinos do programa (e exercícios que faltarem). Não apaga nada. */
 export async function carregarPrograma(): Promise<number> {
   return db.transaction('rw', db.exercicios, db.treinos, async () => {

@@ -42,12 +42,6 @@ export interface Serie {
   tipo?: 'aquec' // séries de aquecimento/feeder não contam em volume, recordes nem metas
 }
 
-export interface Diario {
-  data: string // AAAA-MM-DD
-  agua: number // ml
-  feitos: string[] // ids dos hábitos marcados
-}
-
 export const ehTrabalho = (s: Serie) => s.tipo !== 'aquec'
 
 export const db = new Dexie('academia') as Dexie & {
@@ -55,7 +49,6 @@ export const db = new Dexie('academia') as Dexie & {
   treinos: EntityTable<Treino, 'id'>
   sessoes: EntityTable<Sessao, 'id'>
   series: EntityTable<Serie, 'id'>
-  diario: EntityTable<Diario, 'data'>
 }
 
 db.version(1).stores({
@@ -65,6 +58,7 @@ db.version(1).stores({
   series: '++id, sessaoId, exercicioId',
 })
 db.version(2).stores({ diario: 'data' })
+db.version(3).stores({ diario: null }) // checklist de hábitos removido
 
 const PADRAO: [string, string[]][] = [
   ['Peito', ['Supino reto', 'Supino inclinado', 'Crucifixo', 'Crossover']],
@@ -126,7 +120,6 @@ export async function exportarDados(): Promise<string> {
     treinos: await db.treinos.toArray(),
     sessoes: await db.sessoes.toArray(),
     series: await db.series.toArray(),
-    diario: await db.diario.toArray(),
   })
 }
 
@@ -135,12 +128,11 @@ export async function importarDados(json: string) {
   if (d?.app !== 'academia' || !['exercicios', 'treinos', 'sessoes', 'series'].every((k) => Array.isArray(d[k]))) {
     throw new Error('Arquivo de backup inválido')
   }
-  await db.transaction('rw', [db.exercicios, db.treinos, db.sessoes, db.series, db.diario], async () => {
-    await Promise.all([db.exercicios.clear(), db.treinos.clear(), db.sessoes.clear(), db.series.clear(), db.diario.clear()])
+  await db.transaction('rw', [db.exercicios, db.treinos, db.sessoes, db.series], async () => {
+    await Promise.all([db.exercicios.clear(), db.treinos.clear(), db.sessoes.clear(), db.series.clear()])
     await db.exercicios.bulkAdd(d.exercicios)
     await db.treinos.bulkAdd(d.treinos)
     await db.sessoes.bulkAdd(d.sessoes)
     await db.series.bulkAdd(d.series)
-    if (Array.isArray(d.diario)) await db.diario.bulkAdd(d.diario)
   })
 }

@@ -41,10 +41,6 @@ export const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 export const fmtDescanso = (seg: number) =>
   seg >= 60 ? `${Math.floor(seg / 60)}${seg % 60 ? `:${String(seg % 60).padStart(2, '0')}` : ''} min` : `${seg}s`
 
-/** ~35 ml/kg/dia + reposição do treino (~0,5–1 L por hora de treino). */
-export const metaAgua = (pesoKg: number, diaDeTreino: boolean) =>
-  Math.round((pesoKg * 35 + (diaDeTreino ? 700 : 0)) / 100) * 100
-
 function lerPref(chave: string, padrao: number) {
   try {
     return Number(localStorage.getItem(chave)) || padrao
@@ -62,12 +58,6 @@ function gravarPref(chave: string, valor: number) {
 }
 
 export const preferencias = {
-  get peso(): number {
-    return lerPref('peso', 74)
-  },
-  set peso(kg: number) {
-    gravarPref('peso', kg)
-  },
   get descanso(): number {
     return lerPref('descanso', 90)
   },

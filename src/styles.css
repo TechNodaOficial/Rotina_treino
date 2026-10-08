@@ -185,7 +185,7 @@ input:focus, .seletor:focus { outline: 2px solid var(--destaque); outline-offset
 .abas button { flex: 1; background: transparent; color: var(--sub); border-radius: 0; min-height: 60px; font-weight: 500; font-size: 0.85rem; }
 .abas button.ativa { color: var(--destaque); }
 
-/* Checklist e programa */
+/* Programa e checklist do treino */
 .check {
   flex: none;
   width: 24px;
@@ -199,11 +199,6 @@ input:focus, .seletor:focus { outline: 2px solid var(--destaque); outline-offset
   font-weight: 800;
 }
 .check.marcado { background: var(--destaque); border-color: var(--destaque); color: var(--destaque-texto); }
-.lista button.habito { gap: 12px; text-align: left; padding: 12px 14px; }
-.habito span:last-child { display: flex; flex-direction: column; gap: 2px; }
-.habito small { color: var(--sub); font-size: 0.8rem; }
-.barra { height: 8px; background: var(--fundo); border-radius: 99px; margin-top: 12px; overflow: hidden; }
-.barra div { height: 100%; background: var(--destaque); border-radius: 99px; transition: width 0.3s; }
 .alvo { color: var(--texto); }
 button.link { background: none; color: var(--destaque); min-height: 0; padding: 0 0 0 8px; font-weight: 500; font-size: inherit; display: inline; }
 .detalhes { background: var(--fundo); border-radius: 10px; padding: 4px 12px; margin-top: 8px; font-size: 0.875rem; }
