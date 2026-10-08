@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, ehTrabalho, excluirSessao } from '../db'
+import { buscarSessaoAtiva, db, ehTrabalho, excluirSessao, reabrirSessao } from '../db'
 import type { Navegar } from '../App'
 import { agrupar, fmtData, fmtDuracao, fmtPeso, fmtSerie, volume } from '../util'
 
@@ -8,6 +8,8 @@ export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Na
   const series = useLiveQuery(() => db.series.where('sessaoId').equals(id).sortBy('feitoEm'), [id]) ?? []
   const exercicios = useLiveQuery(() => db.exercicios.toArray()) ?? []
   const nomeEx = new Map(exercicios.map((e) => [e.id, e.nome]))
+
+  const ativa = useLiveQuery(buscarSessaoAtiva)
 
   if (!sessao) return null
   const porEx = agrupar(series, (s) => s.exercicioId)
@@ -43,6 +45,19 @@ export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Na
         </button>
       ))}
 
+      {sessao.fim && (
+        <button
+          className="sec largo"
+          disabled={!!ativa}
+          onClick={async () => {
+            await reabrirSessao(id)
+            navegar({ t: 'sessao', id }, { substituir: true })
+          }}
+        >
+          Editar séries
+        </button>
+      )}
+      {sessao.fim && ativa && <p className="sub centro">Finalize o treino em andamento para editar este.</p>}
       <button className="perigo largo" onClick={excluir}>
         Excluir treino
       </button>

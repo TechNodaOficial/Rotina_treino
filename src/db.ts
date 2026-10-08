@@ -29,6 +29,7 @@ export interface Sessao {
   inicio: number
   fim?: number
   itens: TreinoItem[] // cópia do treino no momento em que começou
+  retroativo?: boolean // registrado depois, com a data de quando foi feito
 }
 
 export interface Serie {
@@ -83,23 +84,30 @@ export function buscarSessaoAtiva() {
   return db.sessoes.filter((s) => !s.fim).first()
 }
 
-export async function iniciarSessao(treino?: Treino): Promise<number> {
+/** Começa um treino agora ou, com `inicio`, registra um treino já feito naquela data. */
+export async function iniciarSessao(treino?: Treino, inicio?: number): Promise<number> {
   return db.sessoes.add({
     treinoId: treino?.id,
     nome: treino?.nome ?? 'Treino livre',
-    inicio: Date.now(),
+    inicio: inicio ?? Date.now(),
     itens: treino ? treino.itens.map((i) => ({ ...i })) : [],
-  } as Sessao)
+    ...(inicio !== undefined ? { retroativo: true } : {}),
+  })
 }
 
-/** Séries da sessão mais recente (fora a atual) em que o exercício foi feito. */
-export async function ultimaVez(exercicioId: number, excetoSessaoId?: number): Promise<Serie[]> {
+/** Volta um treino finalizado para edição. */
+export async function reabrirSessao(id: number) {
+  await db.sessoes.update(id, { fim: undefined, retroativo: true })
+}
+
+/** Séries da sessão mais recente (fora a atual e antes de `antesDe`) em que o exercício foi feito. */
+export async function ultimaVez(exercicioId: number, excetoSessaoId?: number, antesDe = Infinity): Promise<Serie[]> {
   const outras = (await db.series.where('exercicioId').equals(exercicioId).toArray()).filter(
-    (s) => s.sessaoId !== excetoSessaoId && ehTrabalho(s),
+    (s) => s.sessaoId !== excetoSessaoId && ehTrabalho(s) && s.feitoEm < antesDe,
   )
   if (!outras.length) return []
-  const ultima = Math.max(...outras.map((s) => s.sessaoId))
-  return outras.filter((s) => s.sessaoId === ultima).sort((a, b) => a.feitoEm - b.feitoEm)
+  const recente = outras.reduce((a, b) => (b.feitoEm > a.feitoEm ? b : a))
+  return outras.filter((s) => s.sessaoId === recente.sessaoId).sort((a, b) => a.feitoEm - b.feitoEm)
 }
 
 export async function excluirSessao(id: number) {

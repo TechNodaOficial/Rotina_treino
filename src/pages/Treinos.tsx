@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { db, iniciarSessao, type Treino } from '../db'
 import { carregarPrograma } from '../programa'
 import { DIAS } from '../util'
+import RegistrarPassado from '../components/RegistrarPassado'
 import type { Navegar } from '../App'
 
 export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaId?: number }) {
@@ -49,6 +50,8 @@ export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaI
           </button>
         </article>
       )}
+
+      {!!treinos?.length && <RegistrarPassado navegar={navegar} ativaId={ativaId} />}
 
       <details className="card guia">
         <summary>Como fazer as séries</summary>

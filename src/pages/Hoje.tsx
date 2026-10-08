@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, iniciarSessao, type Diario, type Treino } from '../db'
 import type { Navegar } from '../App'
 import { HABITOS } from '../programa'
+import RegistrarPassado from '../components/RegistrarPassado'
 import { DIAS, fmtNum, hojeISO, metaAgua, preferencias } from '../util'
 
 export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?: number }) {
@@ -100,6 +101,8 @@ export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?:
           )}
         </article>
       )}
+
+      {treinos.length > 0 && <RegistrarPassado navegar={navegar} ativaId={ativaId} />}
 
       <article className={`card ${agua >= meta ? 'concluido' : ''}`}>
         <div className="linha-titulo">

@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, ehTrabalho, excluirSessao, ultimaVez, type Serie, type TreinoItem } from '../db'
 import type { Navegar } from '../App'
 import SeletorExercicio from '../components/SeletorExercicio'
-import { fmtDescanso, fmtDuracao, fmtPeso, fmtSerie, lerNumero, preferencias, volume } from '../util'
+import { fmtData, fmtDescanso, fmtDuracao, fmtPeso, fmtSerie, lerNumero, preferencias, volume } from '../util'
 
 const DESCANSO_AQUECIMENTO = 60
 
@@ -46,6 +46,10 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   }
 
   const atualizarItens = (itens: TreinoItem[]) => db.sessoes.update(id, { itens })
+  const retro = !!sessao.retroativo
+  const inicio = sessao.inicio
+  // Em treinos registrados depois, as séries ficam com a data do treino (1 min entre elas, para manter a ordem).
+  const momento = () => (retro ? Math.max(inicio, ...series.map((s) => s.feitoEm)) + 60000 : Date.now())
   const trabalho = series.filter(ehTrabalho)
   const exerciciosFeitos = sessao.itens.filter((i) => {
     const n = trabalho.filter((s) => s.exercicioId === i.exercicioId).length
@@ -60,7 +64,8 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
       }
       return
     }
-    await db.sessoes.update(id, { fim: Date.now() })
+    const fim = retro ? Math.max(inicio + 60 * 60000, ...series.map((s) => s.feitoEm)) : Date.now()
+    await db.sessoes.update(id, { fim })
     navegar({ t: 'sessaoDetalhe', id }, { substituir: true })
   }
 
@@ -77,7 +82,8 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
         <div>
           <h1>{sessao.nome}</h1>
           <p className="sub">
-            {fmtDuracao(agora - sessao.inicio)} · {trabalho.length} séries · {fmtPeso(volume(series))}
+            {retro ? `Registrando treino de ${fmtData(sessao.inicio)}` : fmtDuracao(agora - sessao.inicio)} ·{' '}
+            {trabalho.length} séries · {fmtPeso(volume(series))}
           </p>
         </div>
         <span className="meta">
@@ -92,7 +98,9 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
           item={item}
           nome={nomeEx.get(item.exercicioId) ?? '?'}
           series={series.filter((s) => s.exercicioId === item.exercicioId)}
-          onSerie={iniciarDescanso}
+          antesDe={retro ? sessao.inicio : undefined}
+          momento={momento}
+          onSerie={retro ? () => {} : iniciarDescanso}
           onRemover={() => atualizarItens(sessao.itens.filter((i) => i.exercicioId !== item.exercicioId))}
         />
       ))}
@@ -103,7 +111,7 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
       />
 
       <button className="largo" onClick={finalizar}>
-        Finalizar treino
+        {retro ? 'Salvar treino' : 'Finalizar treino'}
       </button>
       <button className="perigo largo" onClick={descartar}>
         Descartar
@@ -135,12 +143,14 @@ interface CardProps {
   item: TreinoItem
   nome: string
   series: Serie[]
+  antesDe?: number
+  momento: () => number
   onSerie: (descansoSeg: number) => void
   onRemover: () => void
 }
 
-function CardExercicio({ sessaoId, item, nome, series, onSerie, onRemover }: CardProps) {
-  const anterior = useLiveQuery(() => ultimaVez(item.exercicioId, sessaoId), [item.exercicioId, sessaoId])
+function CardExercicio({ sessaoId, item, nome, series, antesDe, momento, onSerie, onRemover }: CardProps) {
+  const anterior = useLiveQuery(() => ultimaVez(item.exercicioId, sessaoId, antesDe), [item.exercicioId, sessaoId, antesDe])
   const [peso, setPeso] = useState('')
   const [reps, setReps] = useState('')
   const [aquecendo, setAquecendo] = useState(false)
@@ -170,7 +180,7 @@ function CardExercicio({ sessaoId, item, nome, series, onSerie, onRemover }: Car
       exercicioId: item.exercicioId,
       peso: p,
       reps: Math.round(r),
-      feitoEm: Date.now(),
+      feitoEm: momento(),
       ...(aquecendo ? { tipo: 'aquec' as const } : {}),
     })
     onSerie(aquecendo ? DESCANSO_AQUECIMENTO : descanso)
