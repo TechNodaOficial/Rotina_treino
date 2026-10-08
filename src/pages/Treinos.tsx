@@ -72,6 +72,9 @@ export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaI
             <button onClick={() => iniciar(t)} disabled={!!ativaId}>
               Iniciar
             </button>
+            <button className="sec" onClick={() => navegar({ t: 'treinoVer', id: t.id })}>
+              Ver
+            </button>
             <button className="sec" onClick={() => navegar({ t: 'treino', id: t.id })}>
               Editar
             </button>

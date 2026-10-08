@@ -4,6 +4,7 @@ import { buscarSessaoAtiva } from './db'
 import Hoje from './pages/Hoje'
 import Treinos from './pages/Treinos'
 import TreinoEditor from './pages/TreinoEditor'
+import TreinoVer from './pages/TreinoVer'
 import SessaoAtiva from './pages/SessaoAtiva'
 import Historico from './pages/Historico'
 import SessaoDetalhe from './pages/SessaoDetalhe'
@@ -15,6 +16,7 @@ export type Tela =
   | { t: 'hoje' }
   | { t: 'treinos' }
   | { t: 'treino'; id?: number }
+  | { t: 'treinoVer'; id: number }
   | { t: 'sessao'; id: number }
   | { t: 'historico' }
   | { t: 'sessaoDetalhe'; id: number }
@@ -26,7 +28,7 @@ export type Navegar = (tela: Tela, opts?: { substituir?: boolean }) => void
 
 const ABAS: { t: Tela['t']; rotulo: string; grupo: Tela['t'][] }[] = [
   { t: 'hoje', rotulo: 'Hoje', grupo: ['hoje'] },
-  { t: 'treinos', rotulo: 'Treinos', grupo: ['treinos', 'treino', 'sessao'] },
+  { t: 'treinos', rotulo: 'Treinos', grupo: ['treinos', 'treino', 'treinoVer', 'sessao'] },
   { t: 'historico', rotulo: 'Histórico', grupo: ['historico', 'sessaoDetalhe'] },
   { t: 'exercicios', rotulo: 'Exercícios', grupo: ['exercicios', 'exercicio'] },
   { t: 'ajustes', rotulo: 'Ajustes', grupo: ['ajustes'] },
@@ -71,6 +73,7 @@ export default function App() {
         {tela.t === 'hoje' && <Hoje navegar={navegar} ativaId={ativa?.id} />}
         {tela.t === 'treinos' && <Treinos navegar={navegar} ativaId={ativa?.id} />}
         {tela.t === 'treino' && <TreinoEditor id={tela.id} />}
+        {tela.t === 'treinoVer' && <TreinoVer id={tela.id} navegar={navegar} ativaId={ativa?.id} />}
         {tela.t === 'sessao' && <SessaoAtiva id={tela.id} navegar={navegar} />}
         {tela.t === 'historico' && <Historico navegar={navegar} />}
         {tela.t === 'sessaoDetalhe' && <SessaoDetalhe id={tela.id} navegar={navegar} />}

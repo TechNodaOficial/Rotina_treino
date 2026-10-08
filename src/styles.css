@@ -219,3 +219,6 @@ button.link { background: none; color: var(--destaque); min-height: 0; padding: 
 .guia ol { padding-left: 20px; margin: 12px 0 0; font-size: 0.875rem; line-height: 1.5; }
 .guia li + li { margin-top: 6px; }
 p.meta { margin: 4px 0 0; }
+
+.ordem { flex: none; width: 24px; height: 24px; border-radius: 99px; background: var(--borda); color: var(--sub); font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.card > button.link { padding: 12px 0 0; }
