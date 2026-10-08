@@ -4,6 +4,7 @@ import { db, iniciarSessao, type Treino } from '../db'
 import { carregarPrograma } from '../programa'
 import { DIAS } from '../util'
 import RegistrarPassado from '../components/RegistrarPassado'
+import ImportarTreino from '../components/ImportarTreino'
 import type { Navegar } from '../App'
 
 export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaId?: number }) {
@@ -52,6 +53,7 @@ export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaI
       )}
 
       {!!treinos?.length && <RegistrarPassado navegar={navegar} ativaId={ativaId} />}
+      <ImportarTreino />
 
       <details className="card guia">
         <summary>Como fazer as séries</summary>

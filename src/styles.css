@@ -219,3 +219,4 @@ p.meta { margin: 4px 0 0; }
 .card > button.link { padding: 12px 0 0; }
 .campo .seletor { margin: 4px 0 0; color: var(--texto); }
 input[type='date'] { appearance: none; -webkit-appearance: none; }
+.colar { font: 0.8rem/1.4 ui-monospace, monospace; width: 100%; margin-top: 10px; background: var(--fundo); color: var(--texto); border: 1px solid var(--borda); border-radius: 10px; padding: 10px; resize: vertical; }

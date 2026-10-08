@@ -1,0 +1,62 @@
+{
+  "nome": "Sex · Pernas B (posterior)",
+  "dias": [
+    5
+  ],
+  "itens": [
+    {
+      "exercicio": "Stiff",
+      "grupo": "Pernas",
+      "series": 3,
+      "reps": "6-8",
+      "descanso": 180,
+      "aquecimento": "Rampa: 1×10 com ~50% · 1×5 com ~70% · 1×2-3 com ~85-90%. Descanse 2-3 min e comece o trabalho.",
+      "nota": "Quadril para trás, barra rente às pernas. Pare quando a lombar quiser arredondar: essa é a sua amplitude. Carga: defina no dia (1-2 RIR)."
+    },
+    {
+      "exercicio": "Cadeira flexora",
+      "grupo": "Pernas",
+      "series": 4,
+      "reps": "10-12",
+      "descanso": 90,
+      "aquecimento": "Sem aquecimento: o músculo já está quente.",
+      "nota": "60 kg, buscando 12. Controle a descida e leve a última série à falha."
+    },
+    {
+      "exercicio": "Leg press",
+      "grupo": "Pernas",
+      "series": 3,
+      "reps": "10-12",
+      "descanso": 120,
+      "aquecimento": "Feeder: 1×6-8 com ~60% da carga de trabalho.",
+      "nota": "Pés altos na plataforma, descendo fundo sem tirar o quadril do banco. Se sobrar tempo, faça 2×8-10 de hip thrust depois."
+    },
+    {
+      "exercicio": "Adutora",
+      "grupo": "Pernas",
+      "series": 3,
+      "reps": "12-15",
+      "descanso": 75,
+      "aquecimento": "Sem aquecimento: o músculo já está quente.",
+      "nota": "Carga: defina no dia (1-2 RIR)."
+    },
+    {
+      "exercicio": "Panturrilha em pé",
+      "grupo": "Pernas",
+      "series": 4,
+      "reps": "8-12",
+      "descanso": 75,
+      "aquecimento": "Feeder: 1×6-8 com ~60% da carga de trabalho.",
+      "nota": "Pausa de 1-2 s embaixo, sem quicar."
+    },
+    {
+      "exercicio": "Elevação de pernas",
+      "grupo": "Core",
+      "series": 3,
+      "reps": "10-15",
+      "descanso": 60,
+      "aquecimento": "Sem aquecimento: o músculo já está quente.",
+      "nota": "Peso corporal. Suba o quadril, não só as pernas."
+    }
+  ]
+}
