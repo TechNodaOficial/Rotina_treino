@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { buscarSessaoAtiva } from './db'
+import Hoje from './pages/Hoje'
 import Treinos from './pages/Treinos'
 import TreinoEditor from './pages/TreinoEditor'
 import SessaoAtiva from './pages/SessaoAtiva'
@@ -11,6 +12,7 @@ import ExercicioDetalhe from './pages/ExercicioDetalhe'
 import Ajustes from './pages/Ajustes'
 
 export type Tela =
+  | { t: 'hoje' }
   | { t: 'treinos' }
   | { t: 'treino'; id?: number }
   | { t: 'sessao'; id: number }
@@ -23,6 +25,7 @@ export type Tela =
 export type Navegar = (tela: Tela, opts?: { substituir?: boolean }) => void
 
 const ABAS: { t: Tela['t']; rotulo: string; grupo: Tela['t'][] }[] = [
+  { t: 'hoje', rotulo: 'Hoje', grupo: ['hoje'] },
   { t: 'treinos', rotulo: 'Treinos', grupo: ['treinos', 'treino', 'sessao'] },
   { t: 'historico', rotulo: 'Histórico', grupo: ['historico', 'sessaoDetalhe'] },
   { t: 'exercicios', rotulo: 'Exercícios', grupo: ['exercicios', 'exercicio'] },
@@ -30,7 +33,7 @@ const ABAS: { t: Tela['t']; rotulo: string; grupo: Tela['t'][] }[] = [
 ]
 
 export default function App() {
-  const [tela, setTela] = useState<Tela>({ t: 'treinos' })
+  const [tela, setTela] = useState<Tela>({ t: 'hoje' })
   const ativa = useLiveQuery(buscarSessaoAtiva)
   const retomou = useRef(false)
 
@@ -43,8 +46,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    history.replaceState({ t: 'treinos' }, '')
-    const aoVoltar = (e: PopStateEvent) => setTela((e.state as Tela) ?? { t: 'treinos' })
+    history.replaceState({ t: 'hoje' }, '')
+    const aoVoltar = (e: PopStateEvent) => setTela((e.state as Tela) ?? { t: 'hoje' })
     window.addEventListener('popstate', aoVoltar)
     return () => window.removeEventListener('popstate', aoVoltar)
   }, [])
@@ -65,6 +68,7 @@ export default function App() {
             Treino em andamento: <strong>{ativa.nome}</strong> — continuar
           </button>
         )}
+        {tela.t === 'hoje' && <Hoje navegar={navegar} ativaId={ativa?.id} />}
         {tela.t === 'treinos' && <Treinos navegar={navegar} ativaId={ativa?.id} />}
         {tela.t === 'treino' && <TreinoEditor id={tela.id} />}
         {tela.t === 'sessao' && <SessaoAtiva id={tela.id} navegar={navegar} />}

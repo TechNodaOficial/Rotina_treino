@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, excluirSessao, ultimaVez, type Serie, type TreinoItem } from '../db'
+import { db, ehTrabalho, excluirSessao, ultimaVez, type Serie, type TreinoItem } from '../db'
 import type { Navegar } from '../App'
 import SeletorExercicio from '../components/SeletorExercicio'
-import { fmtDuracao, fmtPeso, fmtSerie, lerNumero, preferencias, volume } from '../util'
+import { fmtDescanso, fmtDuracao, fmtPeso, fmtSerie, lerNumero, preferencias, volume } from '../util'
+
+const DESCANSO_AQUECIMENTO = 60
 
 export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Navegar }) {
   const sessao = useLiveQuery(() => db.sessoes.get(id), [id])
@@ -29,9 +31,9 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
     if (restante !== null && restante < -5) setFimDescanso(null)
   }, [restante])
 
-  function iniciarDescanso() {
+  function iniciarDescanso(segundos: number) {
     avisou.current = false
-    setFimDescanso(Date.now() + preferencias.descanso * 1000)
+    setFimDescanso(Date.now() + segundos * 1000)
   }
 
   if (sessao === undefined) return null
@@ -44,12 +46,17 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   }
 
   const atualizarItens = (itens: TreinoItem[]) => db.sessoes.update(id, { itens })
+  const trabalho = series.filter(ehTrabalho)
+  const exerciciosFeitos = sessao.itens.filter((i) => {
+    const n = trabalho.filter((s) => s.exercicioId === i.exercicioId).length
+    return i.series > 0 ? n >= i.series : n > 0
+  }).length
 
   async function finalizar() {
     if (!series.length) {
       if (confirm('Nenhuma série registrada. Descartar este treino?')) {
         await excluirSessao(id)
-        navegar({ t: 'treinos' }, { substituir: true })
+        navegar({ t: 'hoje' }, { substituir: true })
       }
       return
     }
@@ -60,7 +67,7 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   async function descartar() {
     if (confirm('Descartar este treino e todas as séries registradas nele?')) {
       await excluirSessao(id)
-      navegar({ t: 'treinos' }, { substituir: true })
+      navegar({ t: 'hoje' }, { substituir: true })
     }
   }
 
@@ -70,9 +77,12 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
         <div>
           <h1>{sessao.nome}</h1>
           <p className="sub">
-            {fmtDuracao(agora - sessao.inicio)} · {series.length} séries · {fmtPeso(volume(series))}
+            {fmtDuracao(agora - sessao.inicio)} · {trabalho.length} séries · {fmtPeso(volume(series))}
           </p>
         </div>
+        <span className="meta">
+          {exerciciosFeitos}/{sessao.itens.length}
+        </span>
       </header>
 
       {sessao.itens.map((item) => (
@@ -125,7 +135,7 @@ interface CardProps {
   item: TreinoItem
   nome: string
   series: Serie[]
-  onSerie: () => void
+  onSerie: (descansoSeg: number) => void
   onRemover: () => void
 }
 
@@ -133,47 +143,79 @@ function CardExercicio({ sessaoId, item, nome, series, onSerie, onRemover }: Car
   const anterior = useLiveQuery(() => ultimaVez(item.exercicioId, sessaoId), [item.exercicioId, sessaoId])
   const [peso, setPeso] = useState('')
   const [reps, setReps] = useState('')
+  const [aquecendo, setAquecendo] = useState(false)
+  const [detalhes, setDetalhes] = useState(false)
 
-  // Sugere a carga da última série feita hoje ou, se for a primeira, a da última vez.
-  const sugestao = series.at(-1) ?? anterior?.[series.length] ?? anterior?.at(-1)
+  const trabalho = series.filter(ehTrabalho)
+  const descanso = item.descanso ?? preferencias.descanso
+
+  // Sugere a carga da última série de trabalho de hoje ou, se for a primeira, a da última vez.
+  const sugestao = trabalho.at(-1) ?? anterior?.[trabalho.length] ?? anterior?.at(-1)
   useEffect(() => {
-    if (sugestao) {
+    if (sugestao && !aquecendo) {
       setPeso(String(sugestao.peso).replace('.', ','))
       setReps(String(sugestao.reps))
     }
-  }, [series.length, anterior?.length])
+  }, [trabalho.length, anterior?.length])
 
-  const meta = item.series ? `${item.series} × ${item.reps || '?'}` : null
-  const concluido = item.series > 0 && series.length >= item.series
+  const concluido = item.series > 0 ? trabalho.length >= item.series : trabalho.length > 0
+  const temDetalhes = !!(item.aquecimento || item.nota)
 
   async function adicionar() {
     const p = lerNumero(peso)
     const r = lerNumero(reps)
     if (p === null || p < 0 || r === null || r <= 0) return
-    await db.series.add({ sessaoId, exercicioId: item.exercicioId, peso: p, reps: Math.round(r), feitoEm: Date.now() })
-    onSerie()
+    await db.series.add({
+      sessaoId,
+      exercicioId: item.exercicioId,
+      peso: p,
+      reps: Math.round(r),
+      feitoEm: Date.now(),
+      ...(aquecendo ? { tipo: 'aquec' as const } : {}),
+    })
+    onSerie(aquecendo ? DESCANSO_AQUECIMENTO : descanso)
   }
 
   return (
     <article className={`card ${concluido ? 'concluido' : ''}`}>
       <div className="linha-titulo">
+        <span className={`check ${concluido ? 'marcado' : ''}`} aria-hidden="true">{concluido ? '✓' : ''}</span>
         <h2>{nome}</h2>
-        {meta && <span className="meta">{meta}</span>}
         {!series.length && (
           <button className="icone" onClick={onRemover} aria-label="Remover exercício">
             ×
           </button>
         )}
       </div>
-      {anterior && anterior.length > 0 && (
-        <p className="sub">Última vez: {anterior.map(fmtSerie).join(', ')}</p>
+      <p className="sub">
+        {item.series ? (
+          <strong className="alvo">
+            {trabalho.length}/{item.series} × {item.reps || '?'}
+          </strong>
+        ) : null}
+        {item.series ? ' · ' : ''}descanso {fmtDescanso(descanso)}
+        {temDetalhes && (
+          <button className="link" onClick={() => setDetalhes((d) => !d)}>
+            {detalhes ? 'ocultar' : 'como fazer'}
+          </button>
+        )}
+      </p>
+      {detalhes && (
+        <div className="detalhes">
+          {item.aquecimento && <p><strong>Aquecimento:</strong> {item.aquecimento}</p>}
+          {item.nota && <p><strong>Execução:</strong> {item.nota}</p>}
+        </div>
       )}
+      {anterior && anterior.length > 0 && <p className="sub">Última vez: {anterior.map(fmtSerie).join(', ')}</p>}
 
       {series.length > 0 && (
         <ol className="series">
           {series.map((s) => (
-            <li key={s.id}>
-              <span>{fmtPeso(s.peso)} × {s.reps}</span>
+            <li key={s.id} className={ehTrabalho(s) ? '' : 'aquec'}>
+              <span>
+                {!ehTrabalho(s) && <em>aquec </em>}
+                {fmtPeso(s.peso)} × {s.reps}
+              </span>
               <button className="icone" onClick={() => db.series.delete(s.id)} aria-label="Apagar série">
                 ×
               </button>
@@ -191,8 +233,12 @@ function CardExercicio({ sessaoId, item, nome, series, onSerie, onRemover }: Car
           reps
           <input inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} onFocus={(e) => e.target.select()} />
         </label>
-        <button onClick={adicionar}>+ Série</button>
+        <button onClick={adicionar}>{aquecendo ? '+ Aquec.' : '+ Série'}</button>
       </div>
+      <label className="alternador">
+        <input type="checkbox" checked={aquecendo} onChange={(e) => setAquecendo(e.target.checked)} />
+        Série de aquecimento / feeder (não conta no volume)
+      </label>
     </article>
   )
 }

@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../db'
+import { db, ehTrabalho } from '../db'
 import type { Navegar } from '../App'
 import { agrupar, fmtData, fmtDuracao, fmtPeso, volume } from '../util'
 
@@ -20,7 +20,7 @@ export default function Historico({ navegar }: { navegar: Navegar }) {
           <button key={s.id} className="card item" onClick={() => navegar({ t: 'sessaoDetalhe', id: s.id })}>
             <h2>{s.nome}</h2>
             <p className="sub">
-              {fmtData(s.inicio)} · {fmtDuracao(s.fim! - s.inicio)} · {ss.length} séries · {fmtPeso(volume(ss))}
+              {fmtData(s.inicio)} · {fmtDuracao(s.fim! - s.inicio)} · {ss.filter(ehTrabalho).length} séries · {fmtPeso(volume(ss))}
             </p>
           </button>
         )

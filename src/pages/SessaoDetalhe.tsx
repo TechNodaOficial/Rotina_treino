@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, excluirSessao } from '../db'
+import { db, ehTrabalho, excluirSessao } from '../db'
 import type { Navegar } from '../App'
 import { agrupar, fmtData, fmtDuracao, fmtPeso, fmtSerie, volume } from '../util'
 
@@ -31,7 +31,7 @@ export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Na
       </header>
 
       <div className="stats">
-        <div><strong>{series.length}</strong><span>séries</span></div>
+        <div><strong>{series.filter(ehTrabalho).length}</strong><span>séries</span></div>
         <div><strong>{porEx.size}</strong><span>exercícios</span></div>
         <div><strong>{fmtPeso(volume(series))}</strong><span>volume</span></div>
       </div>
@@ -39,7 +39,7 @@ export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Na
       {[...porEx].map(([exId, ss]) => (
         <button key={exId} className="card item" onClick={() => navegar({ t: 'exercicio', id: exId })}>
           <h2>{nomeEx.get(exId) ?? '?'}</h2>
-          <p className="sub">{ss.map(fmtSerie).join(', ')}</p>
+          <p className="sub">{ss.filter(ehTrabalho).map(fmtSerie).join(', ')}</p>
         </button>
       ))}
 

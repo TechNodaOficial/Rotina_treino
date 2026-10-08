@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../db'
+import { db, ehTrabalho } from '../db'
 import Grafico from '../components/Grafico'
 import { agrupar, fmtData, fmtPeso, fmtSerie, umRM } from '../util'
 
 export default function ExercicioDetalhe({ id }: { id: number }) {
   const exercicio = useLiveQuery(() => db.exercicios.get(id), [id])
-  const series = useLiveQuery(() => db.series.where('exercicioId').equals(id).sortBy('feitoEm'), [id]) ?? []
+  const todas = useLiveQuery(() => db.series.where('exercicioId').equals(id).sortBy('feitoEm'), [id]) ?? []
+  const series = todas.filter(ehTrabalho)
   const usadoEm = useLiveQuery(() => db.treinos.filter((t) => t.itens.some((i) => i.exercicioId === id)).count(), [id])
   const [metrica, setMetrica] = useState<'peso' | '1rm'>('peso')
   const [nome, setNome] = useState('')
@@ -81,7 +82,7 @@ export default function ExercicioDetalhe({ id }: { id: number }) {
           Salvar alterações
         </button>
       )}
-      {series.length === 0 && !usadoEm ? (
+      {todas.length === 0 && !usadoEm ? (
         <button className="perigo largo" onClick={excluir}>Excluir exercício</button>
       ) : (
         <p className="sub centro">Exercícios com histórico ou usados em algum treino não podem ser excluídos.</p>

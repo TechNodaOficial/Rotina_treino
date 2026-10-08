@@ -2,15 +2,22 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type TreinoItem } from '../db'
 import SeletorExercicio from '../components/SeletorExercicio'
+import { DIAS } from '../util'
 
 export default function TreinoEditor({ id }: { id?: number }) {
   const [nome, setNome] = useState('')
   const [itens, setItens] = useState<TreinoItem[]>([])
+  const [dias, setDias] = useState<number[]>([])
   const exercicios = useLiveQuery(() => db.exercicios.toArray()) ?? []
   const nomeEx = new Map(exercicios.map((e) => [e.id, e.nome]))
 
   useEffect(() => {
-    if (id) db.treinos.get(id).then((t) => t && (setNome(t.nome), setItens(t.itens)))
+    if (id) db.treinos.get(id).then((t) => {
+        if (!t) return
+        setNome(t.nome)
+        setItens(t.itens)
+        setDias(t.dias ?? [])
+      })
   }, [id])
 
   const alterar = (i: number, campo: Partial<TreinoItem>) =>
@@ -26,7 +33,7 @@ export default function TreinoEditor({ id }: { id?: number }) {
     })
 
   async function salvar() {
-    const dados = { nome: nome.trim() || 'Treino sem nome', itens }
+    const dados = { nome: nome.trim() || 'Treino sem nome', itens, dias }
     if (id) await db.treinos.update(id, dados)
     else await db.treinos.add(dados)
     history.back()
@@ -49,6 +56,19 @@ export default function TreinoEditor({ id }: { id?: number }) {
         Nome
         <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: A — Peito e Tríceps" />
       </label>
+
+      <p className="campo">Dias da semana</p>
+      <div className="dias">
+        {DIAS.map((d, i) => (
+          <button
+            key={d}
+            className={dias.includes(i) ? '' : 'sec'}
+            onClick={() => setDias((ds) => (ds.includes(i) ? ds.filter((x) => x !== i) : [...ds, i].sort()))}
+          >
+            {d}
+          </button>
+        ))}
+      </div>
 
       {itens.map((item, i) => (
         <article key={`${item.exercicioId}-${i}`} className="card compacto">
@@ -73,7 +93,24 @@ export default function TreinoEditor({ id }: { id?: number }) {
               Repetições
               <input value={item.reps} onChange={(e) => alterar(i, { reps: e.target.value })} placeholder="8-12" />
             </label>
+            <label className="campo">
+              Descanso (s)
+              <input
+                inputMode="numeric"
+                value={item.descanso ?? ''}
+                placeholder="padrão"
+                onChange={(e) => alterar(i, { descanso: Number(e.target.value.replace(/\D/g, '')) || undefined })}
+              />
+            </label>
           </div>
+          <label className="campo">
+            Aquecimento
+            <input value={item.aquecimento ?? ''} onChange={(e) => alterar(i, { aquecimento: e.target.value || undefined })} placeholder="Ex: 1×6-8 com 60%" />
+          </label>
+          <label className="campo">
+            Execução / observações
+            <input value={item.nota ?? ''} onChange={(e) => alterar(i, { nota: e.target.value || undefined })} />
+          </label>
         </article>
       ))}
 

@@ -10,12 +10,16 @@ export interface TreinoItem {
   exercicioId: number
   series: number
   reps: string // texto livre: "10", "8-12", "até a falha"
+  descanso?: number // segundos entre séries de trabalho
+  aquecimento?: string
+  nota?: string
 }
 
 export interface Treino {
   id: number
   nome: string
   itens: TreinoItem[]
+  dias?: number[] // 0 = domingo … 6 = sábado
 }
 
 export interface Sessao {
@@ -34,13 +38,23 @@ export interface Serie {
   reps: number
   peso: number
   feitoEm: number
+  tipo?: 'aquec' // séries de aquecimento/feeder não contam em volume, recordes nem metas
 }
+
+export interface Diario {
+  data: string // AAAA-MM-DD
+  agua: number // ml
+  feitos: string[] // ids dos hábitos marcados
+}
+
+export const ehTrabalho = (s: Serie) => s.tipo !== 'aquec'
 
 export const db = new Dexie('academia') as Dexie & {
   exercicios: EntityTable<Exercicio, 'id'>
   treinos: EntityTable<Treino, 'id'>
   sessoes: EntityTable<Sessao, 'id'>
   series: EntityTable<Serie, 'id'>
+  diario: EntityTable<Diario, 'data'>
 }
 
 db.version(1).stores({
@@ -49,6 +63,7 @@ db.version(1).stores({
   sessoes: '++id, inicio, treinoId',
   series: '++id, sessaoId, exercicioId',
 })
+db.version(2).stores({ diario: 'data' })
 
 const PADRAO: [string, string[]][] = [
   ['Peito', ['Supino reto', 'Supino inclinado', 'Crucifixo', 'Crossover']],
@@ -80,7 +95,7 @@ export async function iniciarSessao(treino?: Treino): Promise<number> {
 /** Séries da sessão mais recente (fora a atual) em que o exercício foi feito. */
 export async function ultimaVez(exercicioId: number, excetoSessaoId?: number): Promise<Serie[]> {
   const outras = (await db.series.where('exercicioId').equals(exercicioId).toArray()).filter(
-    (s) => s.sessaoId !== excetoSessaoId,
+    (s) => s.sessaoId !== excetoSessaoId && ehTrabalho(s),
   )
   if (!outras.length) return []
   const ultima = Math.max(...outras.map((s) => s.sessaoId))
@@ -103,6 +118,7 @@ export async function exportarDados(): Promise<string> {
     treinos: await db.treinos.toArray(),
     sessoes: await db.sessoes.toArray(),
     series: await db.series.toArray(),
+    diario: await db.diario.toArray(),
   })
 }
 
@@ -111,11 +127,12 @@ export async function importarDados(json: string) {
   if (d?.app !== 'academia' || !['exercicios', 'treinos', 'sessoes', 'series'].every((k) => Array.isArray(d[k]))) {
     throw new Error('Arquivo de backup inválido')
   }
-  await db.transaction('rw', [db.exercicios, db.treinos, db.sessoes, db.series], async () => {
-    await Promise.all([db.exercicios.clear(), db.treinos.clear(), db.sessoes.clear(), db.series.clear()])
+  await db.transaction('rw', [db.exercicios, db.treinos, db.sessoes, db.series, db.diario], async () => {
+    await Promise.all([db.exercicios.clear(), db.treinos.clear(), db.sessoes.clear(), db.series.clear(), db.diario.clear()])
     await db.exercicios.bulkAdd(d.exercicios)
     await db.treinos.bulkAdd(d.treinos)
     await db.sessoes.bulkAdd(d.sessoes)
     await db.series.bulkAdd(d.series)
+    if (Array.isArray(d.diario)) await db.diario.bulkAdd(d.diario)
   })
 }

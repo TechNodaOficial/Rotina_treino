@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { exportarDados, importarDados } from '../db'
-import { preferencias } from '../util'
+import { carregarPrograma } from '../programa'
+import { fmtNum, metaAgua, preferencias } from '../util'
 
 export default function Ajustes() {
   const [descanso, setDescanso] = useState(String(preferencias.descanso))
+  const [peso, setPeso] = useState(String(preferencias.peso))
   const [persistente, setPersistente] = useState<boolean | null>(null)
   const [msg, setMsg] = useState('')
 
@@ -51,6 +53,36 @@ export default function Ajustes() {
             }}
           />
         </label>
+        <label className="campo">
+          Seu peso (kg), usado na meta de água
+          <input
+            inputMode="decimal"
+            value={peso}
+            onChange={(e) => {
+              setPeso(e.target.value)
+              const n = Number(e.target.value.replace(',', '.'))
+              if (n > 0) preferencias.peso = n
+            }}
+          />
+        </label>
+        <p className="sub">
+          Meta de água: {fmtNum(metaAgua(preferencias.peso, true) / 1000)} L em dia de treino, {fmtNum(metaAgua(preferencias.peso, false) / 1000)} L
+          no descanso (~35 ml/kg + reposição do treino).
+        </p>
+      </article>
+
+      <article className="card">
+        <h2>Programa de hipertrofia</h2>
+        <p className="sub">Adiciona os 5 treinos do programa sem apagar nada. Treinos com o mesmo nome são ignorados.</p>
+        <button
+          className="largo"
+          onClick={async () => {
+            const n = await carregarPrograma()
+            setMsg(n ? `${n} treinos adicionados.` : 'O programa já está carregado.')
+          }}
+        >
+          Carregar programa
+        </button>
       </article>
 
       <article className="card">
