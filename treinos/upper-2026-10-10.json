@@ -1,0 +1,71 @@
+{
+  "nome": "Sáb · Upper",
+  "dias": [
+    6
+  ],
+  "itens": [
+    {
+      "exercicio": "Supino reto",
+      "grupo": "Peito",
+      "series": 3,
+      "reps": "6-8",
+      "descanso": 180,
+      "aquecimento": "Rampa: 1×10 com ~50% · 1×5 com ~70% · 1×2-3 com ~85-90%. Descanse 2-3 min e comece o trabalho.",
+      "nota": "Composto principal de peito, ficou de fora na terça. Carga: defina no dia (1-2 RIR) e registre carga e reps de cada série."
+    },
+    {
+      "exercicio": "Puxada articulada",
+      "grupo": "Costas",
+      "series": 3,
+      "reps": "8-10",
+      "descanso": 150,
+      "aquecimento": "Feeder: 1×6-8 com ~60% da carga de trabalho.",
+      "nota": "Descanso de 2-2,5 min. Carga: defina no dia (1-2 RIR) e registre carga e reps de cada série."
+    },
+    {
+      "exercicio": "Serrote",
+      "grupo": "Costas",
+      "series": 3,
+      "reps": "8-12",
+      "descanso": 120,
+      "aquecimento": "Sem aquecimento: comece direto.",
+      "nota": "20 kg, buscando 12. Sem ela, costas fecharia a semana com 9 séries."
+    },
+    {
+      "exercicio": "Elevação lateral",
+      "grupo": "Ombros",
+      "series": 4,
+      "reps": "12-15",
+      "descanso": 75,
+      "aquecimento": "Sem aquecimento: comece direto.",
+      "nota": "5 kg, buscando 12+. Entra no lugar do desenvolvimento: ombro lateral só teve 3 séries na semana."
+    },
+    {
+      "exercicio": "Rosca scott",
+      "grupo": "Bíceps",
+      "series": 3,
+      "reps": "8-12",
+      "descanso": 90,
+      "aquecimento": "Sem aquecimento: comece direto.",
+      "nota": "20 kg, buscando 10. Para encurtar o treino, faça em bi-set com o tríceps unilateral: alterne um e outro e descanse 90 s depois do par."
+    },
+    {
+      "exercicio": "Tríceps unilateral",
+      "grupo": "Tríceps",
+      "series": 3,
+      "reps": "10-12",
+      "descanso": 75,
+      "aquecimento": "Sem aquecimento: comece direto.",
+      "nota": "Carga: defina no dia (1-2 RIR). Pode ser feito em bi-set com a rosca scott."
+    },
+    {
+      "exercicio": "Crucifixo inverso",
+      "grupo": "Ombros",
+      "series": 2,
+      "reps": "15-20",
+      "descanso": 60,
+      "aquecimento": "Sem aquecimento: comece direto.",
+      "nota": "Opcional, se sobrar tempo. Leve. Rende mais que a flexão de punho, porque o ombro posterior teve só 3 séries na semana. Se preferir a flexão de punho, troque o exercício na hora."
+    }
+  ]
+}
