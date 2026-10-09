@@ -434,3 +434,54 @@ input[type='date'] { appearance: none; -webkit-appearance: none; }
     transition-duration: 1ms !important;
   }
 }
+
+/* Treino em andamento: um exercício por vez */
+.trilha {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  margin: 0 -16px 12px;
+  padding: 2px 16px 4px;
+}
+.trilha::-webkit-scrollbar { display: none; }
+.trilha button {
+  flex: none;
+  scroll-snap-align: center;
+  max-width: 168px;
+  min-height: 40px;
+  padding: 6px 12px 6px 6px;
+  gap: 8px;
+  border-radius: 99px;
+  background: var(--card);
+  border: 1px solid var(--borda);
+  color: var(--sub);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.trilha-n {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--borda);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.trilha-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trilha button.feito .trilha-n { background: #c6f43233; color: var(--destaque); }
+.trilha button.atual { border-color: var(--destaque); color: var(--texto); background: #c6f43214; }
+.trilha button.atual .trilha-n { background: var(--destaque); color: var(--destaque-texto); }
+.trilha .ico { stroke-width: 3; }
+
+.foco-pos { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sub); margin: 0 0 8px; }
+.foco .card { margin-bottom: 0; animation: entrar 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+.foco .card h2 { font-size: 1.25rem; }
+.foco .detalhes { font-size: 0.9rem; }
+.navegar-ex { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.navegar-ex + .sub { margin-top: 8px; }

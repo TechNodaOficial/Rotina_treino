@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type TouchEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, ehTrabalho, excluirSessao, ultimaVez, type Serie, type TreinoItem } from '../db'
 import type { Navegar } from '../App'
@@ -9,9 +9,16 @@ import { fmtData, fmtDescanso, fmtDuracao, fmtNum, fmtPeso, fmtSerie, lerNumero,
 
 const DESCANSO_AQUECIMENTO = 60
 
+/** Exercício concluído: fez todas as séries de trabalho previstas (ou pelo menos uma, se não há meta). */
+const concluiu = (item: TreinoItem, trabalho: Serie[]) => {
+  const n = trabalho.filter((s) => s.exercicioId === item.exercicioId).length
+  return item.series > 0 ? n >= item.series : n > 0
+}
+
 export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Navegar }) {
   const sessao = useLiveQuery(() => db.sessoes.get(id), [id])
-  const series = useLiveQuery(() => db.series.where('sessaoId').equals(id).sortBy('feitoEm'), [id]) ?? []
+  const seriesQ = useLiveQuery(() => db.series.where('sessaoId').equals(id).sortBy('feitoEm'), [id])
+  const series = seriesQ ?? []
   const exercicios = useLiveQuery(() => db.exercicios.toArray()) ?? []
   const nomeEx = new Map(exercicios.map((e) => [e.id, e.nome]))
 
@@ -19,6 +26,38 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   const [descanso, setDescanso] = useState<{ fim: number; total: number } | null>(null)
   const avisou = useRef(false)
   const retro = !!sessao?.retroativo
+
+  // Um exercício por vez: `atual` é o índice em sessao.itens.
+  const [atual, setAtual] = useState<number | null>(null)
+  const trilha = useRef<HTMLDivElement>(null)
+  const toque = useRef<{ x: number; y: number } | null>(null)
+  const totalItens = useRef(0)
+  totalItens.current = sessao?.itens.length ?? 0
+
+  // Ao abrir, começa no primeiro exercício ainda não concluído.
+  useEffect(() => {
+    if (atual !== null || !sessao || !seriesQ) return
+    const i = sessao.itens.findIndex((item) => !concluiu(item, seriesQ.filter(ehTrabalho)))
+    setAtual(i === -1 ? Math.max(0, sessao.itens.length - 1) : i)
+  }, [sessao, seriesQ, atual])
+
+  // Mantém o exercício atual visível na trilha.
+  useEffect(() => {
+    trilha.current
+      ?.querySelector('[aria-current="step"]')
+      ?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }, [atual])
+
+  // Setas do teclado trocam de exercício (fora dos campos de texto).
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).closest('input, select, textarea')) return
+      if (e.key === 'ArrowRight') setAtual((a) => Math.min((a ?? 0) + 1, Math.max(0, totalItens.current - 1)))
+      if (e.key === 'ArrowLeft') setAtual((a) => Math.max(0, (a ?? 0) - 1))
+    }
+    window.addEventListener('keydown', aoTeclar)
+    return () => window.removeEventListener('keydown', aoTeclar)
+  }, [])
 
   useEffect(() => {
     const t = setInterval(() => setAgora(Date.now()), 1000)
@@ -76,11 +115,28 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   // Em treinos registrados depois, as séries ficam com a data do treino (1 min entre elas, para manter a ordem).
   const momento = () => (retro ? Math.max(inicio, ...series.map((s) => s.feitoEm)) + 60000 : Date.now())
   const trabalho = series.filter(ehTrabalho)
-  const exerciciosFeitos = sessao.itens.filter((i) => {
-    const n = trabalho.filter((s) => s.exercicioId === i.exercicioId).length
-    return i.series > 0 ? n >= i.series : n > 0
-  }).length
+  const exerciciosFeitos = sessao.itens.filter((i) => concluiu(i, trabalho)).length
   const total = sessao.itens.length
+  const i = Math.min(Math.max(0, atual ?? 0), Math.max(0, total - 1))
+  const item = sessao.itens[i] as TreinoItem | undefined
+  const ir = (j: number) => setAtual(Math.min(Math.max(0, j), total - 1))
+  const atualFeito = !!item && concluiu(item, trabalho)
+  const tudoFeito = total > 0 && exerciciosFeitos === total
+
+  function inicioToque(e: TouchEvent) {
+    const t = e.touches[0]
+    toque.current = (e.target as HTMLElement).closest('input') ? null : { x: t.clientX, y: t.clientY }
+  }
+
+  function fimToque(e: TouchEvent) {
+    if (!toque.current) return
+    const t = e.changedTouches[0]
+    const dx = t.clientX - toque.current.x
+    const dy = t.clientY - toque.current.y
+    toque.current = null
+    // Arrastar para o lado troca de exercício; movimento mais vertical é rolagem.
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) ir(i + (dx < 0 ? 1 : -1))
+  }
 
   async function finalizar() {
     if (!series.length) {
@@ -121,33 +177,68 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
         )}
       </header>
       {total > 0 ? (
-        <div className="progresso" aria-hidden="true">
-          <span style={{ transform: `scaleX(${exerciciosFeitos / total})` }} />
-        </div>
+        <nav className="trilha" ref={trilha} aria-label="Exercícios do treino">
+          {sessao.itens.map((it, j) => {
+            const feito = concluiu(it, trabalho)
+            return (
+              <button
+                key={it.exercicioId}
+                className={`${j === i ? 'atual' : ''} ${feito ? 'feito' : ''}`}
+                aria-current={j === i ? 'step' : undefined}
+                onClick={() => ir(j)}
+              >
+                <span className="trilha-n">{feito ? <Icone nome="check" tamanho={14} /> : j + 1}</span>
+                <span className="trilha-nome">{nomeEx.get(it.exercicioId) ?? '?'}</span>
+              </button>
+            )
+          })}
+        </nav>
       ) : (
         <p className="vazio">Treino livre: escolha o primeiro exercício abaixo.</p>
       )}
 
-      {sessao.itens.map((item) => (
-        <CardExercicio
-          key={item.exercicioId}
-          sessaoId={id}
-          item={item}
-          nome={nomeEx.get(item.exercicioId) ?? '?'}
-          series={series.filter((s) => s.exercicioId === item.exercicioId)}
-          antesDe={retro ? sessao.inicio : undefined}
-          momento={momento}
-          onSerie={retro ? () => {} : iniciarDescanso}
-          onRemover={() => atualizarItens(sessao.itens.filter((i) => i.exercicioId !== item.exercicioId))}
-        />
-      ))}
+      {item && (
+        <div className="foco" onTouchStart={inicioToque} onTouchEnd={fimToque}>
+          <p className="foco-pos">
+            Exercício {i + 1} de {total}
+          </p>
+          <CardExercicio
+            key={item.exercicioId}
+            sessaoId={id}
+            item={item}
+            nome={nomeEx.get(item.exercicioId) ?? '?'}
+            series={series.filter((s) => s.exercicioId === item.exercicioId)}
+            antesDe={retro ? sessao.inicio : undefined}
+            momento={momento}
+            onSerie={retro ? () => {} : iniciarDescanso}
+            onRemover={() => atualizarItens(sessao.itens.filter((x) => x.exercicioId !== item.exercicioId))}
+          />
+          <div className="navegar-ex">
+            <button className="sec" onClick={() => ir(i - 1)} disabled={i === 0}>
+              <Icone nome="voltar" />
+              Anterior
+            </button>
+            <button className={atualFeito && !tudoFeito ? '' : 'sec'} onClick={() => ir(i + 1)} disabled={i >= total - 1}>
+              Próximo
+              <Icone nome="seguir" />
+            </button>
+          </div>
+          {i < total - 1 && (
+            <p className="sub centro">Depois: {nomeEx.get(sessao.itens[i + 1].exercicioId) ?? '?'}</p>
+          )}
+        </div>
+      )}
 
+      <h3 className="grupo">Treino</h3>
       <SeletorExercicio
-        ocultar={sessao.itens.map((i) => i.exercicioId)}
-        onEscolher={(exercicioId) => atualizarItens([...sessao.itens, { exercicioId, series: 0, reps: '' }])}
+        ocultar={sessao.itens.map((x) => x.exercicioId)}
+        onEscolher={(exercicioId) => {
+          atualizarItens([...sessao.itens, { exercicioId, series: 0, reps: '' }])
+          setAtual(total) // vai direto para o exercício adicionado
+        }}
       />
 
-      <button className="largo" onClick={finalizar}>
+      <button className={`largo ${tudoFeito || total === 0 ? '' : 'sec'}`} onClick={finalizar}>
         <Icone nome="check" />
         {retro ? 'Salvar treino' : 'Finalizar treino'}
       </button>
@@ -195,7 +286,7 @@ function CardExercicio({ sessaoId, item, nome, series, antesDe, momento, onSerie
   const [peso, setPeso] = useState('')
   const [reps, setReps] = useState('')
   const [aquecendo, setAquecendo] = useState(false)
-  const [detalhes, setDetalhes] = useState(false)
+  const [detalhes, setDetalhes] = useState(true)
 
   const trabalho = series.filter(ehTrabalho)
   const descanso = item.descanso ?? preferencias.descanso
