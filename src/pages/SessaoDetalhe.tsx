@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { buscarSessaoAtiva, db, ehTrabalho, excluirSessao, reabrirSessao } from '../db'
 import type { Navegar } from '../App'
 import { agrupar, fmtData, fmtDuracao, fmtPeso, fmtSerie, volume } from '../util'
+import { avisar } from '../toast'
 
 export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Navegar }) {
   const sessao = useLiveQuery(() => db.sessoes.get(id), [id])
@@ -18,6 +19,7 @@ export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Na
     if (confirm('Excluir este treino do histórico?')) {
       await excluirSessao(id)
       navegar({ t: 'historico' }, { substituir: true })
+      avisar('Treino excluído do histórico.')
     }
   }
 
@@ -38,6 +40,7 @@ export default function SessaoDetalhe({ id, navegar }: { id: number; navegar: Na
         <div><strong>{fmtPeso(volume(series))}</strong><span>volume</span></div>
       </div>
 
+      {porEx.size === 0 && <p className="vazio">Nenhuma série registrada neste treino.</p>}
       {[...porEx].map(([exId, ss]) => (
         <button key={exId} className="card item" onClick={() => navegar({ t: 'exercicio', id: exId })}>
           <h2>{nomeEx.get(exId) ?? '?'}</h2>

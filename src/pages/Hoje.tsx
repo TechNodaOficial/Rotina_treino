@@ -3,6 +3,7 @@ import { db, iniciarSessao, type Treino } from '../db'
 import type { Navegar } from '../App'
 import RegistrarPassado from '../components/RegistrarPassado'
 import { DIAS } from '../util'
+import Icone from '../components/Icone'
 
 export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?: number }) {
   const agora = new Date()
@@ -43,9 +44,17 @@ export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?:
             <Check marcado={treinou} />
             <h2>{t.nome}</h2>
           </div>
-          <p className="sub">{t.itens.length} exercícios · {t.itens.reduce((n, i) => n + i.series, 0)} séries de trabalho</p>
+          <p className="sub">
+            {treinou
+              ? 'Treino de hoje concluído. Descanse bem.'
+              : `${t.itens.length} exercícios · ${t.itens.reduce((n, i) => n + i.series, 0)} séries de trabalho`}
+          </p>
           <div className="acoes">
-            {!treinou && (
+            {treinou ? (
+              <button className="sec" onClick={() => navegar({ t: 'sessaoDetalhe', id: feitosHoje![0].id })}>
+                Ver resumo
+              </button>
+            ) : (
               <button onClick={() => iniciar(t)}>{ativaId ? 'Continuar treino' : 'Iniciar treino'}</button>
             )}
             <button className="sec" onClick={() => navegar({ t: 'treinoVer', id: t.id })}>
@@ -56,12 +65,17 @@ export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?:
       ))}
       {!diaDeTreino && (
         <article className="card">
-          <h2>Dia de descanso</h2>
+          <h2>{treinos.length ? 'Dia de descanso' : 'Bem-vindo'}</h2>
           <p className="sub">
             {treinos.length
               ? 'Nenhum treino programado para hoje.'
-              : 'Carregue o programa na aba Treinos para ver o treino do dia aqui.'}
+              : 'Monte seus treinos (ou carregue o programa pronto) e o treino do dia aparece aqui.'}
           </p>
+          {!treinos.length && (
+            <button className="largo" onClick={() => navegar({ t: 'treinos' })}>
+              Montar meus treinos
+            </button>
+          )}
           {proximo && (
             <>
               <p className="sub">
@@ -92,5 +106,9 @@ export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?:
 
 
 function Check({ marcado }: { marcado: boolean }) {
-  return <span className={`check ${marcado ? 'marcado' : ''}`} aria-hidden="true">{marcado ? '✓' : ''}</span>
+  return (
+    <span className={`check ${marcado ? 'marcado' : ''}`} aria-hidden="true">
+      {marcado && <Icone nome="check" tamanho={16} />}
+    </span>
+  )
 }

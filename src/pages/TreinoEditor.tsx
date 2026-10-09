@@ -3,6 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type TreinoItem } from '../db'
 import SeletorExercicio from '../components/SeletorExercicio'
 import { DIAS } from '../util'
+import Icone from '../components/Icone'
+import { avisar } from '../toast'
 
 export default function TreinoEditor({ id }: { id?: number }) {
   const [nome, setNome] = useState('')
@@ -37,6 +39,7 @@ export default function TreinoEditor({ id }: { id?: number }) {
     if (id) await db.treinos.update(id, dados)
     else await db.treinos.add(dados)
     history.back()
+    avisar('Treino salvo.')
   }
 
   async function excluir() {
@@ -58,11 +61,12 @@ export default function TreinoEditor({ id }: { id?: number }) {
       </label>
 
       <p className="campo">Dias da semana</p>
-      <div className="dias">
+      <div className="dias" role="group" aria-label="Dias da semana">
         {DIAS.map((d, i) => (
           <button
             key={d}
             className={dias.includes(i) ? '' : 'sec'}
+            aria-pressed={dias.includes(i)}
             onClick={() => setDias((ds) => (ds.includes(i) ? ds.filter((x) => x !== i) : [...ds, i].sort()))}
           >
             {d}
@@ -70,14 +74,25 @@ export default function TreinoEditor({ id }: { id?: number }) {
         ))}
       </div>
 
+      {itens.length === 0 && <p className="vazio">Nenhum exercício ainda. Adicione o primeiro abaixo.</p>}
       {itens.map((item, i) => (
         <article key={`${item.exercicioId}-${i}`} className="card compacto">
           <div className="linha-titulo">
             <h2>{nomeEx.get(item.exercicioId) ?? '?'}</h2>
             <div className="mini">
-              <button className="icone" onClick={() => mover(i, -1)} aria-label="Subir">↑</button>
-              <button className="icone" onClick={() => mover(i, 1)} aria-label="Descer">↓</button>
-              <button className="icone perigo" onClick={() => setItens((xs) => xs.filter((_, j) => j !== i))} aria-label="Remover">×</button>
+              <button className="icone" onClick={() => mover(i, -1)} disabled={i === 0} aria-label="Subir">
+                <Icone nome="cima" />
+              </button>
+              <button className="icone" onClick={() => mover(i, 1)} disabled={i === itens.length - 1} aria-label="Descer">
+                <Icone nome="baixo" />
+              </button>
+              <button
+                className="icone perigo"
+                onClick={() => setItens((xs) => xs.filter((_, j) => j !== i))}
+                aria-label={`Remover ${nomeEx.get(item.exercicioId) ?? 'exercício'}`}
+              >
+                <Icone nome="fechar" />
+              </button>
             </div>
           </div>
           <div className="grade2">
@@ -116,8 +131,8 @@ export default function TreinoEditor({ id }: { id?: number }) {
 
       <SeletorExercicio onEscolher={(exercicioId) => setItens((xs) => [...xs, { exercicioId, series: 3, reps: '10' }])} />
 
-      <div className="acoes">
-        <button onClick={salvar}>Salvar</button>
+      <div className="acoes barra-salvar">
+        <button onClick={salvar}>Salvar treino</button>
         <button className="sec" onClick={() => history.back()}>Cancelar</button>
       </div>
       {id && (

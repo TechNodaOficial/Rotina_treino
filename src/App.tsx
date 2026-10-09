@@ -11,6 +11,8 @@ import SessaoDetalhe from './pages/SessaoDetalhe'
 import Exercicios from './pages/Exercicios'
 import ExercicioDetalhe from './pages/ExercicioDetalhe'
 import Ajustes from './pages/Ajustes'
+import Icone, { type NomeIcone } from './components/Icone'
+import { useAviso } from './toast'
 
 export type Tela =
   | { t: 'hoje' }
@@ -26,7 +28,7 @@ export type Tela =
 
 export type Navegar = (tela: Tela, opts?: { substituir?: boolean }) => void
 
-const ABAS: { t: Tela['t']; rotulo: string; grupo: Tela['t'][] }[] = [
+const ABAS: { t: Tela['t'] & NomeIcone; rotulo: string; grupo: Tela['t'][] }[] = [
   { t: 'hoje', rotulo: 'Hoje', grupo: ['hoje'] },
   { t: 'treinos', rotulo: 'Treinos', grupo: ['treinos', 'treino', 'treinoVer', 'sessao'] },
   { t: 'historico', rotulo: 'Histórico', grupo: ['historico', 'sessaoDetalhe'] },
@@ -34,10 +36,14 @@ const ABAS: { t: Tela['t']; rotulo: string; grupo: Tela['t'][] }[] = [
   { t: 'ajustes', rotulo: 'Ajustes', grupo: ['ajustes'] },
 ]
 
+// Telas abertas a partir de outra: ganham um botão "Voltar" (no iPhone instalado não há botão do sistema).
+const INTERNAS: Tela['t'][] = ['treino', 'treinoVer', 'sessaoDetalhe', 'exercicio']
+
 export default function App() {
   const [tela, setTela] = useState<Tela>({ t: 'hoje' })
   const ativa = useLiveQuery(buscarSessaoAtiva)
   const retomou = useRef(false)
+  const [aviso, fecharAviso] = useAviso()
 
   // Integra com o botão "voltar" do celular.
   const navegar: Navegar = (nova, opts) => {
@@ -64,10 +70,20 @@ export default function App() {
 
   return (
     <>
-      <main>
+      <main key={tela.t}>
+        {INTERNAS.includes(tela.t) && (
+          <button className="voltar" onClick={() => history.back()}>
+            <Icone nome="voltar" />
+            Voltar
+          </button>
+        )}
         {ativa && !(tela.t === 'sessao' && tela.id === ativa.id) && (
           <button className="banner" onClick={() => navegar({ t: 'sessao', id: ativa.id })}>
-            Treino em andamento: <strong>{ativa.nome}</strong> — continuar
+            <span className="pulso" aria-hidden="true" />
+            <span>
+              Em andamento: <strong>{ativa.nome}</strong>
+            </span>
+            <span className="banner-acao">Continuar</span>
           </button>
         )}
         {tela.t === 'hoje' && <Hoje navegar={navegar} ativaId={ativa?.id} />}
@@ -81,16 +97,37 @@ export default function App() {
         {tela.t === 'exercicio' && <ExercicioDetalhe id={tela.id} />}
         {tela.t === 'ajustes' && <Ajustes />}
       </main>
-      <nav className="abas">
-        {ABAS.map((a) => (
-          <button
-            key={a.t}
-            className={a.grupo.includes(tela.t) ? 'ativa' : ''}
-            onClick={() => navegar({ t: a.t } as Tela)}
-          >
-            {a.rotulo}
-          </button>
-        ))}
+      {aviso && (
+        <div className="aviso-toast" role="status" key={aviso.id}>
+          <span>{aviso.texto}</span>
+          {aviso.acao && (
+            <button
+              className="link"
+              onClick={() => {
+                aviso.acao!.fazer()
+                fecharAviso()
+              }}
+            >
+              {aviso.acao.rotulo}
+            </button>
+          )}
+        </div>
+      )}
+      <nav className="abas" aria-label="Navegação principal">
+        {ABAS.map((a) => {
+          const atual = a.grupo.includes(tela.t)
+          return (
+            <button
+              key={a.t}
+              className={atual ? 'ativa' : ''}
+              aria-current={atual ? 'page' : undefined}
+              onClick={() => navegar({ t: a.t } as Tela)}
+            >
+              <Icone nome={a.t} tamanho={22} />
+              {a.rotulo}
+            </button>
+          )
+        })}
       </nav>
     </>
   )

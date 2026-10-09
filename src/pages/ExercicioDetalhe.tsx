@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, ehTrabalho } from '../db'
 import Grafico from '../components/Grafico'
 import { agrupar, fmtData, fmtPeso, fmtSerie, umRM } from '../util'
+import { avisar } from '../toast'
 
 export default function ExercicioDetalhe({ id }: { id: number }) {
   const exercicio = useLiveQuery(() => db.exercicios.get(id), [id])
@@ -35,6 +36,7 @@ export default function ExercicioDetalhe({ id }: { id: number }) {
     if (confirm(`Excluir "${exercicio!.nome}"?`)) {
       await db.exercicios.delete(id)
       history.back()
+      avisar('Exercício excluído.')
     }
   }
 
@@ -50,10 +52,16 @@ export default function ExercicioDetalhe({ id }: { id: number }) {
         <div><strong>{sessoes.length}</strong><span>treinos</span></div>
       </div>
 
-      <div className="alternar">
-        <button className={metrica === 'peso' ? 'ativa' : ''} onClick={() => setMetrica('peso')}>Maior carga</button>
-        <button className={metrica === '1rm' ? 'ativa' : ''} onClick={() => setMetrica('1rm')}>1RM estimado</button>
-      </div>
+      {sessoes.length >= 2 && (
+        <div className="alternar" role="group" aria-label="Métrica do gráfico">
+          <button className={metrica === 'peso' ? 'ativa' : ''} aria-pressed={metrica === 'peso'} onClick={() => setMetrica('peso')}>
+            Maior carga
+          </button>
+          <button className={metrica === '1rm' ? 'ativa' : ''} aria-pressed={metrica === '1rm'} onClick={() => setMetrica('1rm')}>
+            1RM estimado
+          </button>
+        </div>
+      )}
       <Grafico pontos={pontos} />
 
       {sessoes.length > 0 && <h3 className="grupo">Histórico</h3>}
@@ -78,7 +86,14 @@ export default function ExercicioDetalhe({ id }: { id: number }) {
         </label>
       </div>
       {alterado && (
-        <button className="largo" onClick={() => db.exercicios.update(id, { nome: nome.trim(), grupo: grupo.trim() })}>
+        <button
+          className="largo"
+          disabled={!nome.trim()}
+          onClick={async () => {
+            await db.exercicios.update(id, { nome: nome.trim(), grupo: grupo.trim() || 'Outros' })
+            avisar('Alterações salvas.')
+          }}
+        >
           Salvar alterações
         </button>
       )}
