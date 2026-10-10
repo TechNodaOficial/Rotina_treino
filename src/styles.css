@@ -485,3 +485,8 @@ input[type='date'] { appearance: none; -webkit-appearance: none; }
 .foco .detalhes { font-size: 0.9rem; }
 .navegar-ex { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .navegar-ex + .sub { margin-top: 8px; }
+
+/* Bi-set: dois exercícios na mesma tela */
+.biset-elo { margin: 6px 0; text-align: center; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--destaque); }
+.trilha-elo { align-self: center; flex: none; margin: 0 -2px; font-weight: 700; color: var(--destaque); }
+.card > button.chip { margin-top: 4px; }

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { exportarDados, importarDados } from '../db'
 import { carregarPrograma } from '../programa'
 import { VERSAO, buscarAtualizacao } from '../atualizacao'
-import { fmtDescanso, preferencias } from '../util'
+import { exportarAnalise } from '../analise'
+import { fmtDescanso, hojeISO, preferencias } from '../util'
 import { avisar } from '../toast'
 
 const ATALHOS_DESCANSO = [60, 90, 120, 180]
@@ -11,19 +12,40 @@ export default function Ajustes() {
   const [descanso, setDescanso] = useState(String(preferencias.descanso))
   const [persistente, setPersistente] = useState<boolean | null>(null)
   const [versaoMsg, setVersaoMsg] = useState('')
+  const [de, setDe] = useState(() => hojeISO(new Date(Date.now() - 6 * 86400000)))
+  const [ate, setAte] = useState(() => hojeISO())
 
   useEffect(() => {
     navigator.storage?.persisted?.().then(setPersistente)
   }, [])
 
-  async function exportar() {
-    const blob = new Blob([await exportarDados()], { type: 'application/json' })
+  function baixar(json: string, arquivo: string) {
+    const blob = new Blob([json], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `academia-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = arquivo
     a.click()
     URL.revokeObjectURL(a.href)
+  }
+
+  async function exportar() {
+    baixar(await exportarDados(), `academia-backup-${new Date().toISOString().slice(0, 10)}.json`)
     avisar('Backup exportado.')
+  }
+
+  async function analise(destino: 'copiar' | 'baixar') {
+    const json = await exportarAnalise(de, ate)
+    if (!json) return avisar('Nenhum treino finalizado nesse período.')
+    if (destino === 'baixar') {
+      baixar(json, `academia-analise-${de}-a-${ate}.json`)
+      return avisar('Arquivo de análise exportado.')
+    }
+    try {
+      await navigator.clipboard.writeText(json)
+      avisar('Copiado. É só colar na conversa com o avaliador.')
+    } catch {
+      avisar('Não deu para copiar. Use "Baixar arquivo".')
+    }
   }
 
   async function importar(arquivo?: File) {
@@ -87,6 +109,27 @@ export default function Ajustes() {
         >
           Carregar programa
         </button>
+      </article>
+
+      <article className="card">
+        <h2>Análise da semana</h2>
+        <p className="sub">Resumo enxuto dos treinos do período, para mandar ao avaliador.</p>
+        <div className="grade2">
+          <label className="campo">
+            De
+            <input type="date" value={de} max={ate} onChange={(e) => e.target.value && setDe(e.target.value)} />
+          </label>
+          <label className="campo">
+            Até
+            <input type="date" value={ate} min={de} max={hojeISO()} onChange={(e) => e.target.value && setAte(e.target.value)} />
+          </label>
+        </div>
+        <div className="acoes">
+          <button onClick={() => analise('copiar')}>Copiar</button>
+          <button className="sec" onClick={() => analise('baixar')}>
+            Baixar arquivo
+          </button>
+        </div>
       </article>
 
       <article className="card">

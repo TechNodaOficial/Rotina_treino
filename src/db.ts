@@ -13,6 +13,8 @@ export interface TreinoItem {
   descanso?: number // segundos entre séries de trabalho
   aquecimento?: string
   nota?: string
+  biset?: boolean // faz par com o próximo item: uma série de cada, descanso só depois do par
+  substituiu?: number // só em sessões: exercício planejado que foi trocado por este (ex: aparelho ocupado)
 }
 
 export interface Treino {
@@ -43,6 +45,22 @@ export interface Serie {
 }
 
 export const ehTrabalho = (s: Serie) => s.tipo !== 'aquec'
+
+/** Índices dos itens agrupados na ordem do treino: [i, i+1] para um bi-set, [i] para o resto. */
+export function grupos(itens: TreinoItem[]): number[][] {
+  const gs: number[][] = []
+  for (let i = 0; i < itens.length; i++) {
+    if (itens[i].biset && i + 1 < itens.length) gs.push([i, ++i])
+    else gs.push([i])
+  }
+  return gs
+}
+
+/** Tira o item `k`; se ele fechava um bi-set, o parceiro volta a ser um exercício comum. */
+export function removerItem(itens: TreinoItem[], k: number): TreinoItem[] {
+  const parceiro = grupos(itens).find((g) => g.length === 2 && g[1] === k)?.[0]
+  return itens.flatMap((x, j) => (j === k ? [] : j === parceiro ? [{ ...x, biset: undefined }] : [x]))
+}
 
 export const db = new Dexie('academia') as Dexie & {
   exercicios: EntityTable<Exercicio, 'id'>

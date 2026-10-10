@@ -1,0 +1,300 @@
+{
+  "treinos": [
+    {
+      "nome": "Ter · Lower A (quadríceps)",
+      "dias": [
+        2
+      ],
+      "itens": [
+        {
+          "exercicio": "Agachamento pêndulo",
+          "grupo": "Pernas",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 180,
+          "aquecimento": "Rampa: 1×10 com ~50% · 1×5 com ~70% · 1×2-3 com ~85-90%. Descanse 2-3 min e comece o trabalho.",
+          "nota": "Carga: defina no dia (1-2 RIR) e registre carga e reps de cada série."
+        },
+        {
+          "exercicio": "Leg press",
+          "grupo": "Pernas",
+          "series": 3,
+          "reps": "10-12",
+          "descanso": 150,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "85 kg, buscando 12. Pés no meio da plataforma. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Agachamento búlgaro",
+          "grupo": "Pernas",
+          "series": 2,
+          "reps": "8-10",
+          "descanso": 120,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "Cada perna. Carga: defina no dia (1-2 RIR) e registre carga e reps de cada série."
+        },
+        {
+          "exercicio": "Cadeira extensora",
+          "grupo": "Pernas",
+          "series": 3,
+          "reps": "12-15",
+          "descanso": 90,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "70 kg, buscando 12. Se travar em 10-11 reps de novo, desça para 62-65 kg."
+        },
+        {
+          "exercicio": "Mesa flexora",
+          "grupo": "Pernas",
+          "series": 3,
+          "reps": "10-12",
+          "descanso": 90,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "30 kg. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Panturrilha em pé",
+          "grupo": "Pernas",
+          "series": 5,
+          "reps": "8-12",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "30 kg, buscando 12. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Abdominal máquina",
+          "grupo": "Core",
+          "series": 3,
+          "reps": "10-15",
+          "descanso": 60,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "40 kg, buscando 12. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        }
+      ]
+    },
+    {
+      "nome": "Qua · Upper A",
+      "dias": [
+        3
+      ],
+      "itens": [
+        {
+          "exercicio": "Supino reto",
+          "grupo": "Peito",
+          "series": 3,
+          "reps": "6-8",
+          "descanso": 180,
+          "aquecimento": "Rampa: 1×10 com ~50% · 1×5 com ~70% · 1×2-3 com ~85-90%. Descanse 2-3 min e comece o trabalho.",
+          "nota": "30 kg, buscando 8. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Puxada frontal",
+          "grupo": "Costas",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 150,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "32,5 kg. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Supino inclinado",
+          "grupo": "Peito",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 150,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "22 kg, com halteres. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Remada aberta",
+          "grupo": "Costas",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 120,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "42,5 kg. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Elevação lateral máquina",
+          "grupo": "Ombros",
+          "series": 5,
+          "reps": "12-15",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "20 kg. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Rosca scott",
+          "grupo": "Bíceps",
+          "series": 3,
+          "reps": "8-12",
+          "descanso": 90,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "25 kg. Bi-set com o tríceps pulley: faça uma série de cada, sem descanso entre elas, e descanse 90 s depois do par.",
+          "biset": true
+        },
+        {
+          "exercicio": "Tríceps pulley",
+          "grupo": "Tríceps",
+          "series": 3,
+          "reps": "10-12",
+          "descanso": 90,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "10 kg. Bi-set com a rosca scott: descanse 90 s depois do par."
+        }
+      ]
+    },
+    {
+      "nome": "Sex · Lower B (posterior e glúteo)",
+      "dias": [
+        5
+      ],
+      "itens": [
+        {
+          "exercicio": "Stiff",
+          "grupo": "Pernas",
+          "series": 3,
+          "reps": "6-8",
+          "descanso": 180,
+          "aquecimento": "Rampa: 1×10 com ~50% · 1×5 com ~70% · 1×2-3 com ~85-90%. Descanse 2-3 min e comece o trabalho.",
+          "nota": "30 kg, buscando 8. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Cadeira flexora",
+          "grupo": "Pernas",
+          "series": 4,
+          "reps": "10-12",
+          "descanso": 90,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "60 kg, buscando 12. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Hip thrust",
+          "grupo": "Pernas",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 120,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "Carga: defina no dia (1-2 RIR) e registre carga e reps de cada série."
+        },
+        {
+          "exercicio": "Adutora",
+          "grupo": "Pernas",
+          "series": 2,
+          "reps": "12-15",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "39 kg. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Abdutora",
+          "grupo": "Pernas",
+          "series": 2,
+          "reps": "12-15",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "69 kg, buscando 15. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Panturrilha sentado",
+          "grupo": "Pernas",
+          "series": 5,
+          "reps": "12-15",
+          "descanso": 60,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "40 kg, buscando 12. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Elevação de pernas",
+          "grupo": "Core",
+          "series": 3,
+          "reps": "10-15",
+          "descanso": 60,
+          "aquecimento": "Sem aquecimento: comece direto.",
+          "nota": "Peso corporal."
+        }
+      ]
+    },
+    {
+      "nome": "Sáb · Upper B",
+      "dias": [
+        6
+      ],
+      "itens": [
+        {
+          "exercicio": "Puxada articulada",
+          "grupo": "Costas",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 150,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "20 kg, buscando 10. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Supino declinado",
+          "grupo": "Peito",
+          "series": 3,
+          "reps": "8-10",
+          "descanso": 150,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "22 kg. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Serrote",
+          "grupo": "Costas",
+          "series": 3,
+          "reps": "8-12",
+          "descanso": 120,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "20 kg, buscando 12. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Peck deck",
+          "grupo": "Peito",
+          "series": 3,
+          "reps": "10-12",
+          "descanso": 90,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "20 kg, buscando 12. Carga fixa em todas as séries; só suba 2,5-5% quando fechar o topo da faixa em todas."
+        },
+        {
+          "exercicio": "Elevação lateral máquina",
+          "grupo": "Ombros",
+          "series": 5,
+          "reps": "12-15",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "20 kg. Bi-set com o crucifixo inverso nas 3 primeiras séries: uma de cada, sem descanso entre elas, e 75 s depois do par. As 2 últimas séries são sozinhas.",
+          "biset": true
+        },
+        {
+          "exercicio": "Crucifixo inverso",
+          "grupo": "Ombros",
+          "series": 3,
+          "reps": "12-15",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "5 kg. Bi-set com a elevação lateral máquina: descanse 75 s depois do par."
+        },
+        {
+          "exercicio": "Rosca martelo",
+          "grupo": "Bíceps",
+          "series": 2,
+          "reps": "10-12",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "25 kg. Bi-set com o tríceps unilateral: uma série de cada, sem descanso entre elas, e 75 s depois do par.",
+          "biset": true
+        },
+        {
+          "exercicio": "Tríceps unilateral",
+          "grupo": "Tríceps",
+          "series": 3,
+          "reps": "10-12",
+          "descanso": 75,
+          "aquecimento": "Feeder opcional: 1×6-8 com ~60% da carga de trabalho.",
+          "nota": "15 kg. Bi-set com a rosca martelo nas 2 primeiras séries; a 3ª é sozinha. Descanse 75 s depois do par."
+        }
+      ]
+    }
+  ]
+}

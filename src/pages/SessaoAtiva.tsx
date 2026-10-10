@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type TouchEvent } from 'react'
+import { Fragment, useEffect, useRef, useState, type FormEvent, type TouchEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, ehTrabalho, excluirSessao, ultimaVez, type Serie, type TreinoItem } from '../db'
+import { db, ehTrabalho, excluirSessao, grupos, removerItem, ultimaVez, type Serie, type TreinoItem } from '../db'
 import type { Navegar } from '../App'
 import SeletorExercicio from '../components/SeletorExercicio'
 import Icone from '../components/Icone'
@@ -31,8 +31,8 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   const [atual, setAtual] = useState<number | null>(null)
   const trilha = useRef<HTMLDivElement>(null)
   const toque = useRef<{ x: number; y: number } | null>(null)
-  const totalItens = useRef(0)
-  totalItens.current = sessao?.itens.length ?? 0
+  // Vizinhos do exercício (ou bi-set) na tela, para as setas do teclado.
+  const vizinhos = useRef({ ant: 0, prox: 0 })
 
   // Ao abrir, começa no primeiro exercício ainda não concluído.
   useEffect(() => {
@@ -52,8 +52,8 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).closest('input, select, textarea')) return
-      if (e.key === 'ArrowRight') setAtual((a) => Math.min((a ?? 0) + 1, Math.max(0, totalItens.current - 1)))
-      if (e.key === 'ArrowLeft') setAtual((a) => Math.max(0, (a ?? 0) - 1))
+      if (e.key === 'ArrowRight') setAtual(vizinhos.current.prox)
+      if (e.key === 'ArrowLeft') setAtual(vizinhos.current.ant)
     }
     window.addEventListener('keydown', aoTeclar)
     return () => window.removeEventListener('keydown', aoTeclar)
@@ -111,6 +111,22 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   }
 
   const atualizarItens = (itens: TreinoItem[]) => db.sessoes.update(id, { itens })
+
+  /** Troca o exercício só nesta sessão (ex: aparelho ocupado). Mantém a meta; a carga vem do histórico do novo. */
+  function trocar(antigo: TreinoItem, exercicioId: number) {
+    const antes = sessao!.itens
+    const planejado = antigo.substituiu ?? antigo.exercicioId
+    const novo: TreinoItem = {
+      exercicioId,
+      ...(antigo.biset ? { biset: true } : {}),
+      series: antigo.series,
+      reps: antigo.reps,
+      ...(antigo.descanso !== undefined ? { descanso: antigo.descanso } : {}),
+      ...(planejado !== exercicioId ? { substituiu: planejado } : {}),
+    }
+    atualizarItens(antes.map((x) => (x === antigo ? novo : x)))
+    avisar(`Trocado por ${nomeEx.get(exercicioId) ?? '?'}.`, { rotulo: 'Desfazer', fazer: () => atualizarItens(antes) })
+  }
   const inicio = sessao.inicio
   // Em treinos registrados depois, as séries ficam com a data do treino (1 min entre elas, para manter a ordem).
   const momento = () => (retro ? Math.max(inicio, ...series.map((s) => s.feitoEm)) + 60000 : Date.now())
@@ -118,10 +134,26 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
   const exerciciosFeitos = sessao.itens.filter((i) => concluiu(i, trabalho)).length
   const total = sessao.itens.length
   const i = Math.min(Math.max(0, atual ?? 0), Math.max(0, total - 1))
-  const item = sessao.itens[i] as TreinoItem | undefined
+  // Na tela fica o exercício atual ou, num bi-set, o par inteiro.
+  const grupo = grupos(sessao.itens).find((g) => g.includes(i)) ?? []
+  const primeiro = grupo[0] ?? 0
+  const ultimo = grupo.at(-1) ?? 0
   const ir = (j: number) => setAtual(Math.min(Math.max(0, j), total - 1))
-  const atualFeito = !!item && concluiu(item, trabalho)
+  vizinhos.current = { ant: Math.max(0, primeiro - 1), prox: Math.min(ultimo + 1, Math.max(0, total - 1)) }
+  const atualFeito = grupo.length > 0 && grupo.every((j) => concluiu(sessao.itens[j], trabalho))
   const tudoFeito = total > 0 && exerciciosFeitos === total
+
+  /** Num bi-set, só descansa depois do par: se o parceiro ficou uma série atrás, é a vez dele. */
+  function aposSerie(item: TreinoItem, segundos: number, deTrabalho: boolean) {
+    const outro = grupo.map((j) => sessao!.itens[j]).find((x) => x !== item)
+    const feitas = (x: TreinoItem) => trabalho.filter((s) => s.exercicioId === x.exercicioId).length
+    // `trabalho` ainda não inclui a série que acabou de ser registrada.
+    if (outro && deTrabalho && feitas(item) + 1 > feitas(outro) && !concluiu(outro, trabalho)) {
+      avisar(`Bi-set: agora ${nomeEx.get(outro.exercicioId) ?? 'o outro exercício'}, sem descanso.`)
+      return
+    }
+    iniciarDescanso(segundos)
+  }
 
   function inicioToque(e: TouchEvent) {
     const t = e.touches[0]
@@ -135,7 +167,7 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
     const dy = t.clientY - toque.current.y
     toque.current = null
     // Arrastar para o lado troca de exercício; movimento mais vertical é rolagem.
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) ir(i + (dx < 0 ? 1 : -1))
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) ir(dx < 0 ? ultimo + 1 : primeiro - 1)
   }
 
   async function finalizar() {
@@ -181,15 +213,17 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
           {sessao.itens.map((it, j) => {
             const feito = concluiu(it, trabalho)
             return (
-              <button
-                key={it.exercicioId}
-                className={`${j === i ? 'atual' : ''} ${feito ? 'feito' : ''}`}
-                aria-current={j === i ? 'step' : undefined}
-                onClick={() => ir(j)}
-              >
-                <span className="trilha-n">{feito ? <Icone nome="check" tamanho={14} /> : j + 1}</span>
-                <span className="trilha-nome">{nomeEx.get(it.exercicioId) ?? '?'}</span>
-              </button>
+              <Fragment key={it.exercicioId}>
+                <button
+                  className={`${grupo.includes(j) ? 'atual' : ''} ${feito ? 'feito' : ''}`}
+                  aria-current={j === primeiro ? 'step' : undefined}
+                  onClick={() => ir(j)}
+                >
+                  <span className="trilha-n">{feito ? <Icone nome="check" tamanho={14} /> : j + 1}</span>
+                  <span className="trilha-nome">{nomeEx.get(it.exercicioId) ?? '?'}</span>
+                </button>
+                {it.biset && j < total - 1 && <span className="trilha-elo" aria-label="bi-set com">+</span>}
+              </Fragment>
             )
           })}
         </nav>
@@ -197,34 +231,46 @@ export default function SessaoAtiva({ id, navegar }: { id: number; navegar: Nave
         <p className="vazio">Treino livre: escolha o primeiro exercício abaixo.</p>
       )}
 
-      {item && (
+      {grupo.length > 0 && (
         <div className="foco" onTouchStart={inicioToque} onTouchEnd={fimToque}>
           <p className="foco-pos">
-            Exercício {i + 1} de {total}
+            {grupo.length > 1
+              ? `Bi-set · exercícios ${primeiro + 1} e ${ultimo + 1} de ${total}`
+              : `Exercício ${i + 1} de ${total}`}
           </p>
-          <CardExercicio
-            key={item.exercicioId}
-            sessaoId={id}
-            item={item}
-            nome={nomeEx.get(item.exercicioId) ?? '?'}
-            series={series.filter((s) => s.exercicioId === item.exercicioId)}
-            antesDe={retro ? sessao.inicio : undefined}
-            momento={momento}
-            onSerie={retro ? () => {} : iniciarDescanso}
-            onRemover={() => atualizarItens(sessao.itens.filter((x) => x.exercicioId !== item.exercicioId))}
-          />
+          {grupo.map((j) => {
+            const item = sessao.itens[j]
+            return (
+              <Fragment key={item.exercicioId}>
+                {j !== primeiro && <p className="biset-elo">+ sem descanso entre os dois</p>}
+                <CardExercicio
+                  sessaoId={id}
+                  item={item}
+                  nome={nomeEx.get(item.exercicioId) ?? '?'}
+                  series={series.filter((s) => s.exercicioId === item.exercicioId)}
+                  antesDe={retro ? sessao.inicio : undefined}
+                  momento={momento}
+                  onSerie={retro ? () => {} : (seg, deTrabalho) => aposSerie(item, seg, deTrabalho)}
+                  onRemover={() => atualizarItens(removerItem(sessao.itens, j))}
+                  noLugarDe={item.substituiu !== undefined ? (nomeEx.get(item.substituiu) ?? '?') : undefined}
+                  ocultar={sessao.itens.map((x) => x.exercicioId)}
+                  onTrocar={(exercicioId) => trocar(item, exercicioId)}
+                />
+              </Fragment>
+            )
+          })}
           <div className="navegar-ex">
-            <button className="sec" onClick={() => ir(i - 1)} disabled={i === 0}>
+            <button className="sec" onClick={() => ir(primeiro - 1)} disabled={primeiro === 0}>
               <Icone nome="voltar" />
               Anterior
             </button>
-            <button className={atualFeito && !tudoFeito ? '' : 'sec'} onClick={() => ir(i + 1)} disabled={i >= total - 1}>
+            <button className={atualFeito && !tudoFeito ? '' : 'sec'} onClick={() => ir(ultimo + 1)} disabled={ultimo >= total - 1}>
               Próximo
               <Icone nome="seguir" />
             </button>
           </div>
-          {i < total - 1 && (
-            <p className="sub centro">Depois: {nomeEx.get(sessao.itens[i + 1].exercicioId) ?? '?'}</p>
+          {ultimo < total - 1 && (
+            <p className="sub centro">Depois: {nomeEx.get(sessao.itens[ultimo + 1].exercicioId) ?? '?'}</p>
           )}
         </div>
       )}
@@ -277,11 +323,26 @@ interface CardProps {
   series: Serie[]
   antesDe?: number
   momento: () => number
-  onSerie: (descansoSeg: number) => void
+  onSerie: (descansoSeg: number, deTrabalho: boolean) => void
   onRemover: () => void
+  noLugarDe?: string
+  ocultar: number[]
+  onTrocar: (exercicioId: number) => void
 }
 
-function CardExercicio({ sessaoId, item, nome, series, antesDe, momento, onSerie, onRemover }: CardProps) {
+function CardExercicio({
+  sessaoId,
+  item,
+  nome,
+  series,
+  antesDe,
+  momento,
+  onSerie,
+  onRemover,
+  noLugarDe,
+  ocultar,
+  onTrocar,
+}: CardProps) {
   const anterior = useLiveQuery(() => ultimaVez(item.exercicioId, sessaoId, antesDe), [item.exercicioId, sessaoId, antesDe])
   const [peso, setPeso] = useState('')
   const [reps, setReps] = useState('')
@@ -322,7 +383,7 @@ function CardExercicio({ sessaoId, item, nome, series, antesDe, momento, onSerie
       feitoEm: momento(),
       ...(aquecendo ? { tipo: 'aquec' as const } : {}),
     })
-    onSerie(aquecendo ? DESCANSO_AQUECIMENTO : descanso)
+    onSerie(aquecendo ? DESCANSO_AQUECIMENTO : descanso, !aquecendo)
   }
 
   async function apagar(s: Serie) {
@@ -362,7 +423,9 @@ function CardExercicio({ sessaoId, item, nome, series, antesDe, momento, onSerie
           {item.nota && <p><strong>Execução:</strong> {item.nota}</p>}
         </div>
       )}
+      {noLugarDe && <p className="sub">No lugar de {noLugarDe}</p>}
       {anterior && anterior.length > 0 && <p className="sub">Última vez: {anterior.map(fmtSerie).join(', ')}</p>}
+      {!series.length && <SeletorExercicio rotulo="Aparelho ocupado? Trocar exercício" ocultar={ocultar} onEscolher={onTrocar} />}
 
       {series.length > 0 && (
         <ol className="series">

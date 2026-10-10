@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type TreinoItem } from '../db'
+import { db, grupos, removerItem, type TreinoItem } from '../db'
 import SeletorExercicio from '../components/SeletorExercicio'
 import { DIAS } from '../util'
 import Icone from '../components/Icone'
@@ -34,8 +34,18 @@ export default function TreinoEditor({ id }: { id?: number }) {
       return c
     })
 
+  const pares = grupos(itens).filter((g) => g.length === 2)
+
+  /** Liga ou desliga o bi-set do item `i` com o seguinte (que deixa de puxar um par próprio). */
+  const alternarBiset = (i: number) =>
+    setItens((xs) =>
+      xs.map((x, j) => (j === i ? { ...x, biset: !x.biset || undefined } : j === i + 1 ? { ...x, biset: undefined } : x)),
+    )
+
   async function salvar() {
-    const dados = { nome: nome.trim() || 'Treino sem nome', itens, dias }
+    // Bi-set precisa de um próximo: o último item nunca fica marcado.
+    const limpos = itens.map((x, j) => (j === itens.length - 1 && x.biset ? { ...x, biset: undefined } : x))
+    const dados = { nome: nome.trim() || 'Treino sem nome', itens: limpos, dias }
     if (id) await db.treinos.update(id, dados)
     else await db.treinos.add(dados)
     history.back()
@@ -88,7 +98,7 @@ export default function TreinoEditor({ id }: { id?: number }) {
               </button>
               <button
                 className="icone perigo"
-                onClick={() => setItens((xs) => xs.filter((_, j) => j !== i))}
+                onClick={() => setItens((xs) => removerItem(xs, i))}
                 aria-label={`Remover ${nomeEx.get(item.exercicioId) ?? 'exercício'}`}
               >
                 <Icone nome="fechar" />
@@ -126,6 +136,21 @@ export default function TreinoEditor({ id }: { id?: number }) {
             Execução / observações
             <input value={item.nota ?? ''} onChange={(e) => alterar(i, { nota: e.target.value || undefined })} />
           </label>
+          {pares.some((g) => g[1] === i) ? (
+            <p className="sub">Bi-set com {nomeEx.get(itens[i - 1].exercicioId) ?? '?'}</p>
+          ) : (
+            i < itens.length - 1 && (
+              <button
+                type="button"
+                className={`chip ${item.biset ? 'ligado' : ''}`}
+                aria-pressed={!!item.biset}
+                title="Uma série de cada, com descanso só depois do par"
+                onClick={() => alternarBiset(i)}
+              >
+                Bi-set com {nomeEx.get(itens[i + 1].exercicioId) ?? 'o próximo'}
+              </button>
+            )
+          )}
         </article>
       ))}
 

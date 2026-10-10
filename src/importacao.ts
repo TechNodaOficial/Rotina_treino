@@ -6,6 +6,7 @@ import { db, type TreinoItem } from './db'
  *   { "nome": "Sex · Pernas B (posterior)", "dias": [5],
  *     "itens": [{ "exercicio": "Stiff", "grupo": "Pernas", "series": 3, "reps": "6-8",
  *                 "descanso": 180, "aquecimento": "...", "nota": "..." }] }
+ * "biset": true num item faz par com o item seguinte.
  * Exercícios são encontrados pelo nome (sem diferenciar maiúsculas/acentos) e criados se faltarem.
  */
 
@@ -17,6 +18,7 @@ export interface ItemImportado {
   descanso?: number
   aquecimento?: string
   nota?: string
+  biset?: boolean
 }
 
 export interface TreinoImportado {
@@ -68,6 +70,7 @@ export function lerTreinos(colado: string): TreinoImportado[] {
         descanso: Number(it.descanso) > 0 ? Math.round(Number(it.descanso)) : undefined,
         aquecimento: texto(it.aquecimento),
         nota: texto(it.nota),
+        biset: it.biset === true || undefined,
       }
     })
     return { nome, dias, itens }
@@ -99,6 +102,7 @@ export async function salvarTreinos(treinos: TreinoImportado[], substituir: bool
         // O mesmo exercício duas vezes no treino confundiria o registro das séries.
         if (!itens.some((i) => i.exercicioId === id)) itens.push({ exercicioId: id, ...resto })
       }
+      if (itens.length) itens[itens.length - 1].biset = undefined // bi-set precisa de um próximo
 
       const atual = existentes.find((e) => chave(e.nome) === chave(t.nome))
       if (atual && substituir) {
