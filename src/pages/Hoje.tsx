@@ -1,8 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, iniciarSessao, type Treino } from '../db'
+import { db, iniciarSessao, vigente, type Treino } from '../db'
 import type { Navegar } from '../App'
 import RegistrarPassado from '../components/RegistrarPassado'
-import { DIAS } from '../util'
+import { DIAS, hojeISO } from '../util'
 import Icone from '../components/Icone'
 
 export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?: number }) {
@@ -16,11 +16,11 @@ export default function Hoje({ navegar, ativaId }: { navegar: Navegar; ativaId?:
     [inicioDoDia],
   )
 
-  const doDia = treinos.filter((t) => t.dias?.includes(dia))
+  const doDia = treinos.filter((t) => t.dias?.includes(dia) && vigente(t, hojeISO(agora)))
   const diaDeTreino = doDia.length > 0
   const proximo = [1, 2, 3, 4, 5, 6, 7]
-    .map((k) => (dia + k) % 7)
-    .map((d) => ({ dia: d, treino: treinos.find((t) => t.dias?.includes(d)) }))
+    .map((k) => new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + k))
+    .map((d) => ({ dia: d.getDay(), treino: treinos.find((t) => t.dias?.includes(d.getDay()) && vigente(t, hojeISO(d))) }))
     .find((p): p is { dia: number; treino: Treino } => !!p.treino)
 
   async function iniciar(t: Treino) {

@@ -51,6 +51,7 @@ Além da explicação, termine **sempre** com um bloco de código JSON que eu po
 - Use os mesmos nomes de exercício que aparecem no resumo, para manter o histórico. Coloque a carga sugerida em `nota`.
 - Bi-set: coloque os dois exercícios em sequência e marque o primeiro com `"biset": true`. O app mostra o par junto e só conta o descanso depois dos dois.
 - Vários treinos de uma vez: use `{ "treinos": [ ... ] }`.
+- Programa novo que só começa numa data (ex: semana que vem): use `{ "aPartirDe": "AAAA-MM-DD", "treinos": [ ... ] }`. Os treinos colados só aparecem no "Hoje" a partir dessa data, e os treinos antigos deixam de aparecer na véspera. Sem `aPartirDe`, os treinos valem imediatamente e os antigos continuam na agenda.
 
 Regras:
 - Baseie tudo nos dados. Se houver poucas sessões para concluir algo, diga isso em vez de inventar tendência.

@@ -7,6 +7,8 @@ import { db, type TreinoItem } from './db'
  *     "itens": [{ "exercicio": "Stiff", "grupo": "Pernas", "series": 3, "reps": "6-8",
  *                 "descanso": 180, "aquecimento": "...", "nota": "..." }] }
  * "biset": true num item faz par com o item seguinte.
+ * "aPartirDe": "AAAA-MM-DD" ao lado de "treinos" troca o programa nessa data: os treinos colados só entram
+ * na agenda a partir dela e os outros treinos com dia marcado saem da agenda na véspera.
  * Exercícios são encontrados pelo nome (sem diferenciar maiúsculas/acentos) e criados se faltarem.
  */
 
@@ -24,6 +26,7 @@ export interface ItemImportado {
 export interface TreinoImportado {
   nome: string
   dias?: number[]
+  de?: string
   itens: ItemImportado[]
 }
 
@@ -47,6 +50,8 @@ export function lerTreinos(colado: string): TreinoImportado[] {
 
   const d = dados as Record<string, unknown>
   const lista: unknown[] = Array.isArray(dados) ? dados : Array.isArray(d.treinos) ? d.treinos : [dados]
+  const de = Array.isArray(dados) ? undefined : texto(d.aPartirDe)
+  if (de && !/^\d{4}-\d{2}-\d{2}$/.test(de)) throw new Error('"aPartirDe" precisa ser uma data AAAA-MM-DD.')
 
   return lista.map((bruto, i) => {
     const t = bruto as Record<string, unknown>
@@ -73,7 +78,7 @@ export function lerTreinos(colado: string): TreinoImportado[] {
         biset: it.biset === true || undefined,
       }
     })
-    return { nome, dias, itens }
+    return { nome, dias, de, itens }
   })
 }
 
@@ -90,6 +95,7 @@ export async function salvarTreinos(treinos: TreinoImportado[], substituir: bool
     const existentes = await db.treinos.toArray()
     let criados = 0
     let atualizados = 0
+    const gravados = new Set<number>()
 
     for (const t of treinos) {
       const itens: TreinoItem[] = []
@@ -106,11 +112,23 @@ export async function salvarTreinos(treinos: TreinoImportado[], substituir: bool
 
       const atual = existentes.find((e) => chave(e.nome) === chave(t.nome))
       if (atual && substituir) {
-        await db.treinos.update(atual.id, { itens, dias: t.dias ?? atual.dias })
+        await db.treinos.update(atual.id, { itens, dias: t.dias ?? atual.dias, de: t.de, ate: undefined })
+        gravados.add(atual.id)
         atualizados++
       } else {
-        await db.treinos.add({ nome: atual ? `${t.nome} (importado)` : t.nome, dias: t.dias, itens })
+        gravados.add(await db.treinos.add({ nome: atual ? `${t.nome} (importado)` : t.nome, dias: t.dias, de: t.de, itens }))
         criados++
+      }
+    }
+
+    // Troca de programa: o que estava na agenda sai na véspera da data de início do novo.
+    const de = treinos[0]?.de
+    if (de) {
+      const [a, m, d] = de.split('-').map(Number)
+      const v = new Date(a, m - 1, d - 1)
+      const vespera = `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`
+      for (const e of existentes) {
+        if (!gravados.has(e.id) && e.dias?.length && (!e.ate || e.ate > vespera)) await db.treinos.update(e.id, { ate: vespera })
       }
     }
     return { criados, atualizados }

@@ -9,6 +9,8 @@ import Icone from '../components/Icone'
 import { avisar } from '../toast'
 import type { Navegar } from '../App'
 
+const fmtDia = (iso: string) => `${iso.slice(8)}/${iso.slice(5, 7)}`
+
 export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaId?: number }) {
   // Ordena pelo primeiro dia da semana (segunda primeiro, domingo por último).
   const ordem = (t: Treino) => (t.dias?.length ? Math.min(...t.dias.map((d) => (d + 6) % 7)) : 7)
@@ -74,6 +76,11 @@ export default function Treinos({ navegar, ativaId }: { navegar: Navegar; ativaI
                 ))}
               </p>
             ) : null}
+            {(t.de || t.ate) && (
+              <p className="sub">
+                {[t.de && `a partir de ${fmtDia(t.de)}`, t.ate && `até ${fmtDia(t.ate)}`].filter(Boolean).join(' · ')}
+              </p>
+            )}
             <p className="sub">
               {t.itens.map((i) => nome.get(i.exercicioId)).filter(Boolean).join(' · ') || 'Sem exercícios'}
             </p>

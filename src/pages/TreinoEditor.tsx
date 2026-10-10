@@ -10,6 +10,8 @@ export default function TreinoEditor({ id }: { id?: number }) {
   const [nome, setNome] = useState('')
   const [itens, setItens] = useState<TreinoItem[]>([])
   const [dias, setDias] = useState<number[]>([])
+  const [de, setDe] = useState('')
+  const [ate, setAte] = useState('')
   const exercicios = useLiveQuery(() => db.exercicios.toArray()) ?? []
   const nomeEx = new Map(exercicios.map((e) => [e.id, e.nome]))
 
@@ -19,6 +21,8 @@ export default function TreinoEditor({ id }: { id?: number }) {
         setNome(t.nome)
         setItens(t.itens)
         setDias(t.dias ?? [])
+        setDe(t.de ?? '')
+        setAte(t.ate ?? '')
       })
   }, [id])
 
@@ -45,7 +49,7 @@ export default function TreinoEditor({ id }: { id?: number }) {
   async function salvar() {
     // Bi-set precisa de um próximo: o último item nunca fica marcado.
     const limpos = itens.map((x, j) => (j === itens.length - 1 && x.biset ? { ...x, biset: undefined } : x))
-    const dados = { nome: nome.trim() || 'Treino sem nome', itens: limpos, dias }
+    const dados = { nome: nome.trim() || 'Treino sem nome', itens: limpos, dias, de: de || undefined, ate: ate || undefined }
     if (id) await db.treinos.update(id, dados)
     else await db.treinos.add(dados)
     history.back()
@@ -83,6 +87,19 @@ export default function TreinoEditor({ id }: { id?: number }) {
           </button>
         ))}
       </div>
+
+      {dias.length > 0 && (
+        <div className="grade2">
+          <label className="campo">
+            Na agenda a partir de
+            <input type="date" value={de} max={ate || undefined} onChange={(e) => setDe(e.target.value)} />
+          </label>
+          <label className="campo">
+            Até (opcional)
+            <input type="date" value={ate} min={de || undefined} onChange={(e) => setAte(e.target.value)} />
+          </label>
+        </div>
+      )}
 
       {itens.length === 0 && <p className="vazio">Nenhum exercício ainda. Adicione o primeiro abaixo.</p>}
       {itens.map((item, i) => (

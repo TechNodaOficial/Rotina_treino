@@ -22,6 +22,8 @@ export interface Treino {
   nome: string
   itens: TreinoItem[]
   dias?: number[] // 0 = domingo … 6 = sábado
+  de?: string // AAAA-MM-DD: só entra na agenda (Hoje) a partir desta data
+  ate?: string // AAAA-MM-DD: sai da agenda depois desta data
 }
 
 export interface Sessao {
@@ -45,6 +47,9 @@ export interface Serie {
 }
 
 export const ehTrabalho = (s: Serie) => s.tipo !== 'aquec'
+
+/** O treino está na agenda na data `iso` (AAAA-MM-DD)? */
+export const vigente = (t: Treino, iso: string) => (!t.de || t.de <= iso) && (!t.ate || t.ate >= iso)
 
 /** Índices dos itens agrupados na ordem do treino: [i, i+1] para um bi-set, [i] para o resto. */
 export function grupos(itens: TreinoItem[]): number[][] {

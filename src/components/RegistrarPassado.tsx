@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, iniciarSessao } from '../db'
+import { db, iniciarSessao, vigente } from '../db'
 import type { Navegar } from '../App'
 import { hojeISO } from '../util'
 
@@ -15,7 +15,7 @@ export default function RegistrarPassado({ navegar, ativaId }: { navegar: Navega
   const [a, m, d] = data.split('-').map(Number)
   const dia = new Date(a, m - 1, d)
   // Sugere o treino programado para o dia da semana escolhido.
-  const sugerido = treinos.find((t) => t.dias?.includes(dia.getDay()))
+  const sugerido = treinos.find((t) => t.dias?.includes(dia.getDay()) && vigente(t, data))
   const treinoId = escolhido || (sugerido ? String(sugerido.id) : 'livre')
 
   async function registrar() {
